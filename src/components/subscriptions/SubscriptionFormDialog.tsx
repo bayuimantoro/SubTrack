@@ -1,0 +1,401 @@
+import * as React from 'react'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input, Textarea } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
+import { todayIsoDate } from '@/lib/billing-engine'
+import { sanitizeHttpUrl } from '@/lib/utils'
+import { useSubTrack } from '@/hooks/useSubTrack'
+import {
+  BILLING_INTERVAL_LABELS,
+  CURRENCY_OPTIONS,
+  SUBSCRIPTION_CATEGORIES,
+  type BillingInterval,
+  type CurrencyCode,
+  type Subscription,
+  type SubscriptionCategory,
+  type SubscriptionStatus,
+} from '@/types/subscription'
+
+interface SubscriptionFormDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  initial?: Subscription | null
+}
+
+interface FormState {
+  serviceName: string
+  category: SubscriptionCategory
+  price: string
+  currency: CurrencyCode
+  billingInterval: BillingInterval
+  customIntervalDays: string
+  startDate: string
+  paymentMethod: string
+  websiteUrl: string
+  notes: string
+  status: SubscriptionStatus
+}
+
+export function SubscriptionFormDialog({
+  open,
+  onOpenChange,
+  initial,
+}: SubscriptionFormDialogProps) {
+  const { settings, addSubscription, editSubscription } = useSubTrack()
+  const [submitting, setSubmitting] = React.useState(false)
+  const [formError, setFormError] = React.useState<string | null>(null)
+  const errorRef = React.useRef<HTMLDivElement>(null)
+
+  const [form, setForm] = React.useState<FormState>(() => ({
+    serviceName: initial?.serviceName ?? '',
+    category: initial?.category ?? 'Entertainment',
+    price: initial ? String(initial.price) : '',
+    currency: initial?.currency ?? settings.defaultCurrency,
+    billingInterval: initial?.billingInterval ?? 'monthly',
+    customIntervalDays: initial?.customIntervalDays ? String(initial.customIntervalDays) : '30',
+    startDate: initial?.startDate ?? todayIsoDate(),
+    paymentMethod: initial?.paymentMethod ?? '',
+    websiteUrl: initial?.websiteUrl ?? '',
+    notes: initial?.notes ?? '',
+    status: initial?.status ?? 'active',
+  }))
+
+  React.useEffect(() => {
+    if (!open) return
+    setFormError(null)
+    setForm({
+      serviceName: initial?.serviceName ?? '',
+      category: initial?.category ?? 'Entertainment',
+      price: initial ? String(initial.price) : '',
+      currency: initial?.currency ?? settings.defaultCurrency,
+      billingInterval: initial?.billingInterval ?? 'monthly',
+      customIntervalDays: initial?.customIntervalDays ? String(initial.customIntervalDays) : '30',
+      startDate: initial?.startDate ?? todayIsoDate(),
+      paymentMethod: initial?.paymentMethod ?? '',
+      websiteUrl: initial?.websiteUrl ?? '',
+      notes: initial?.notes ?? '',
+      status: initial?.status ?? 'active',
+    })
+  }, [open, initial, settings.defaultCurrency])
+
+  React.useEffect(() => {
+    if (formError) {
+      errorRef.current?.focus()
+    }
+  }, [formError])
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setFormError(null)
+
+    const trimmedName = form.serviceName.trim()
+    const parsedPrice = Number(form.price)
+    if (!trimmedName) {
+      setFormError('Service name is required.')
+      return
+    }
+    if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+      setFormError('Price must be a valid non-negative number.')
+      return
+    }
+    if (!form.startDate) {
+      setFormError('Start date is required.')
+      return
+    }
+    const customDays =
+      form.billingInterval === 'custom' ? Number(form.customIntervalDays) : null
+    if (
+      form.billingInterval === 'custom' &&
+      (!customDays || !Number.isInteger(customDays) || customDays < 1)
+    ) {
+      setFormError('Custom interval days must be at least 1.')
+      return
+    }
+
+    const trimmedUrl = form.websiteUrl.trim()
+    const safeUrl = trimmedUrl ? sanitizeHttpUrl(trimmedUrl) : null
+    if (trimmedUrl && !safeUrl) {
+      setFormError('Website URL must start with http:// or https://.')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const payload = {
+        serviceName: trimmedName,
+        category: form.category,
+        price: parsedPrice,
+        currency: form.currency,
+        billingInterval: form.billingInterval,
+        customIntervalDays: customDays,
+        startDate: form.startDate,
+        paymentMethod: form.paymentMethod.trim() || null,
+        websiteUrl: safeUrl,
+        notes: form.notes.trim() || null,
+        status: form.status,
+      }
+      if (initial) {
+        await editSubscription(initial.id, payload)
+      } else {
+        await addSubscription(payload)
+      }
+      onOpenChange(false)
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Failed to save subscription')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent onClose={() => onOpenChange(false)}>
+        <DialogHeader>
+          <DialogTitle>{initial ? 'Edit Subscription' : 'Add Subscription'}</DialogTitle>
+          <DialogDescription>
+            {initial
+              ? 'Update recurring billing details and status.'
+              : 'Track a new recurring service and automatically calculate its next renewal.'}
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {formError && (
+            <div
+              ref={errorRef}
+              role="alert"
+              tabIndex={-1}
+              className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-700 dark:text-red-400 focus:outline-none"
+            >
+              {formError}
+            </div>
+          )}
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-name">
+                Service Name <span aria-hidden="true">*</span>
+              </label>
+              <Input
+                id="sub-name"
+                placeholder="e.g. Netflix, Spotify, ChatGPT"
+                value={form.serviceName}
+                onChange={(e) => setForm((f) => ({ ...f, serviceName: e.target.value }))}
+                required
+                aria-required="true"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-category">
+                Category *
+              </label>
+              <Select
+                id="sub-category"
+                value={form.category}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, category: e.target.value as SubscriptionCategory }))
+                }
+              >
+                {SUBSCRIPTION_CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="space-y-1.5 sm:col-span-2">
+              <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-price">
+                Price <span aria-hidden="true">*</span>
+              </label>
+              <Input
+                id="sub-price"
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="any"
+                placeholder="186000"
+                value={form.price}
+                onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+                required
+                aria-required="true"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-currency">
+                Currency
+              </label>
+              <Select
+                id="sub-currency"
+                value={form.currency}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, currency: e.target.value as CurrencyCode }))
+                }
+              >
+                {CURRENCY_OPTIONS.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.code} ({c.symbol})
+                  </option>
+                ))}
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-interval">
+                Billing Interval *
+              </label>
+              <Select
+                id="sub-interval"
+                value={form.billingInterval}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, billingInterval: e.target.value as BillingInterval }))
+                }
+              >
+                {Object.entries(BILLING_INTERVAL_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            {form.billingInterval === 'custom' ? (
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-custom-days">
+                  Every N Days <span aria-hidden="true">*</span>
+                </label>
+                <Input
+                  id="sub-custom-days"
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  value={form.customIntervalDays}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, customIntervalDays: e.target.value }))
+                  }
+                  required
+                  aria-required="true"
+                />
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-status">
+                  Status
+                </label>
+                <Select
+                  id="sub-status"
+                  value={form.status}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, status: e.target.value as SubscriptionStatus }))
+                  }
+                >
+                  <option value="active">Active</option>
+                  <option value="paused">Paused</option>
+                  <option value="cancelled">Cancelled</option>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-start-date">
+                Start Date *
+              </label>
+              <Input
+                id="sub-start-date"
+                type="date"
+                value={form.startDate}
+                onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))}
+                required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-payment">
+                Payment Method (optional)
+              </label>
+              <Input
+                id="sub-payment"
+                placeholder="e.g. BCA Debit, GoPay"
+                value={form.paymentMethod}
+                onChange={(e) => setForm((f) => ({ ...f, paymentMethod: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          {form.billingInterval === 'custom' && (
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-status-custom">
+                Status
+              </label>
+              <Select
+                id="sub-status-custom"
+                value={form.status}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, status: e.target.value as SubscriptionStatus }))
+                }
+              >
+                <option value="active">Active</option>
+                <option value="paused">Paused</option>
+                <option value="cancelled">Cancelled</option>
+              </Select>
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-url">
+              Website URL (optional)
+            </label>
+            <Input
+              id="sub-url"
+              type="url"
+              placeholder="https://example.com"
+              value={form.websiteUrl}
+              onChange={(e) => setForm((f) => ({ ...f, websiteUrl: e.target.value }))}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-notes">
+              Notes (optional)
+            </label>
+            <Textarea
+              id="sub-notes"
+              placeholder="Plan tier, shared members, renewal reminders..."
+              value={form.notes}
+              onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={submitting}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={submitting}>
+              {submitting ? 'Saving...' : initial ? 'Save Changes' : 'Add Subscription'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}

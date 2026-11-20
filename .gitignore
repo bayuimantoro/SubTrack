@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local notes & agent artifacts
+promt.md
+.superpowers/
+semantic-review/

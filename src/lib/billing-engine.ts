@@ -229,18 +229,133 @@ export function calculateSpendingSummary(
   }
 }
 
-export function getEffectiveNextBillingDate(
-  sub: Subscription,
-  referenceDate: string = todayIsoDate(),
+export class DuplicateBillingCycleError extends Error {
+  readonly code = 'DUPLICATE_BILLING_CYCLE' as const
+  readonly cycleDate: string
+
+  constructor(cycleDate: string) {
+    super(`Billing cycle ${cycleDate} has already been paid.`)
+    this.name = 'DuplicateBillingCycleError'
+    this.cycleDate = cycleDate
+  }
+}
+
+export function getBillingCycleKey(
+  sub: Pick<Subscription, 'startDate' | 'billingInterval' | 'customIntervalDays' | 'billingDay'>,
+  date: string,
 ): string {
-  if (sub.nextBillingDate >= referenceDate) return sub.nextBillingDate
-  return calculateNextBillingDate(
+  if (date <= sub.startDate) return sub.startDate
+  let current = sub.startDate
+  let next = addIntervalToDate(current, sub.billingInterval, sub.customIntervalDays, sub.billingDay)
+  let guard = 0
+  // ponytail: Linear scan from startDate preserves month-end billingDay; upgrade to O(1) if >100yr.
+  while (next <= date && guard < 5000) {
+    current = next
+    next = addIntervalToDate(current, sub.billingInterval, sub.customIntervalDays, sub.billingDay)
+    guard += 1
+  }
+  return current
+}
+
+export function findDuplicatePaidCycle(
+  sub: Pick<
+    Subscription,
+    'id' | 'startDate' | 'billingInterval' | 'customIntervalDays' | 'billingDay'
+  >,
+  billedAt: string,
+  history: BillingHistoryEntry[],
+): BillingHistoryEntry | undefined {
+  const targetCycle = getBillingCycleKey(sub, billedAt)
+  return history.find(
+    (h) =>
+      h.subscriptionId === sub.id &&
+      h.status === 'paid' &&
+      getBillingCycleKey(sub, h.billedAt) === targetCycle,
+  )
+}
+
+export function hasPaidBillingCycle(
+  sub: Pick<
+    Subscription,
+    'id' | 'startDate' | 'billingInterval' | 'customIntervalDays' | 'billingDay'
+  >,
+  date: string,
+  history: BillingHistoryEntry[],
+): boolean {
+  return Boolean(findDuplicatePaidCycle(sub, date, history))
+}
+
+export function advanceNextBillingDateAfterPayment(
+  sub: Pick<
+    Subscription,
+    'startDate' | 'billingInterval' | 'customIntervalDays' | 'billingDay' | 'nextBillingDate'
+  >,
+  paidAt: string,
+): string {
+  const cycleDue = calculateNextBillingDate(
     sub.startDate,
     sub.billingInterval,
     sub.customIntervalDays,
     sub.billingDay,
-    referenceDate,
+    paidAt,
   )
+
+  // Already advanced past this payment date (duplicate click or historical entry)
+  if (sub.nextBillingDate > cycleDue) {
+    return sub.nextBillingDate
+  }
+
+  // Late payment: calculateNextBillingDate already landed on the next future cycle (> paidAt)
+  if (sub.nextBillingDate <= paidAt && cycleDue > paidAt) {
+    return cycleDue
+  }
+
+  // On-time (cycleDue === paidAt) or early payment for the upcoming cycle (sub.nextBillingDate === cycleDue)
+  return addIntervalToDate(
+    cycleDue,
+    sub.billingInterval,
+    sub.customIntervalDays,
+    sub.billingDay,
+  )
+}
+
+export function getEffectiveNextBillingDate(
+  sub: Subscription,
+  referenceDate: string = todayIsoDate(),
+  history?: BillingHistoryEntry[],
+): string {
+  let cursor =
+    sub.nextBillingDate >= referenceDate
+      ? sub.nextBillingDate
+      : calculateNextBillingDate(
+          sub.startDate,
+          sub.billingInterval,
+          sub.customIntervalDays,
+          sub.billingDay,
+          referenceDate,
+        )
+
+  if (history && history.length > 0) {
+    const paidDates = history
+      .filter((h) => h.subscriptionId === sub.id && h.status === 'paid')
+      .map((h) => h.billedAt)
+
+    if (paidDates.length > 0) {
+      let guard = 0
+      // Advance past any billing cycle already covered by a paid record.
+      while (guard < 5000 && paidDates.some((d) => d >= cursor)) {
+        cursor = addIntervalToDate(
+          cursor,
+          sub.billingInterval,
+          sub.customIntervalDays,
+          sub.billingDay,
+        )
+        guard += 1
+      }
+    }
+  }
+
+  return cursor
 }
 
 export function matchesReminderWindow(
@@ -260,12 +375,13 @@ export function getUpcomingRenewals(
   referenceDate: string = todayIsoDate(),
   withinDays: number = 30,
   includePaused: boolean = false,
+  history?: BillingHistoryEntry[],
 ): Subscription[] {
   return subscriptions
     .filter((sub) => isCountedInRecurring(sub, includePaused))
     .map((sub) => ({
       ...sub,
-      nextBillingDate: getEffectiveNextBillingDate(sub, referenceDate),
+      nextBillingDate: getEffectiveNextBillingDate(sub, referenceDate, history),
     }))
     .filter((sub) => {
       const delta = diffDays(referenceDate, sub.nextBillingDate)

@@ -20,12 +20,12 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { DeleteConfirmDialog } from '@/components/subscriptions/DeleteConfirmDialog'
 import { ServiceIcon } from '@/components/subscriptions/ServiceIcon'
 import { SubscriptionFormDialog } from '@/components/subscriptions/SubscriptionFormDialog'
+import { useI18n } from '@/hooks/useI18n'
 import { useSubTrack } from '@/hooks/useSubTrack'
 import { getEffectiveNextBillingDate, todayIsoDate } from '@/lib/billing-engine'
 import { convertCurrency, formatCurrency } from '@/lib/currency'
 import { sanitizeHttpUrl } from '@/lib/utils'
 import {
-  BILLING_INTERVAL_LABELS,
   SUBSCRIPTION_CATEGORIES,
   type Subscription,
   type SubscriptionStatus,
@@ -35,7 +35,8 @@ type SortOption = 'next_billing_asc' | 'price_desc' | 'price_asc' | 'name_asc'
 type ViewMode = 'grid' | 'table'
 
 export function SubscriptionsPage() {
-  const { subscriptions, settings, loading, editSubscription, removeSubscription } =
+  const { t, formatDate, formatNumber } = useI18n()
+  const { subscriptions, billingHistory, settings, loading, editSubscription, removeSubscription } =
     useSubTrack()
   const [search, setSearch] = React.useState('')
   const [categoryFilter, setCategoryFilter] = React.useState<string>('all')
@@ -57,7 +58,7 @@ export function SubscriptionsPage() {
         nextBillingDate:
           sub.status === 'cancelled'
             ? sub.nextBillingDate
-            : getEffectiveNextBillingDate(sub, today),
+            : getEffectiveNextBillingDate(sub, today, billingHistory),
       }))
       .filter((sub) => {
         if (query && !sub.serviceName.toLowerCase().includes(query)) return false
@@ -84,7 +85,7 @@ export function SubscriptionsPage() {
           return a.serviceName.localeCompare(b.serviceName)
       }
     })
-  }, [subscriptions, search, categoryFilter, statusFilter, sortBy, settings.defaultCurrency, today])
+  }, [subscriptions, billingHistory, search, categoryFilter, statusFilter, sortBy, settings.defaultCurrency, today])
 
   async function handleTogglePause(sub: Subscription) {
     if (sub.status === 'cancelled') return
@@ -120,11 +121,11 @@ export function SubscriptionsPage() {
               aria-hidden="true"
             />
             <Input
-              placeholder="Search by service name..."
+              placeholder={t('subs.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9"
-              aria-label="Search subscriptions"
+              aria-label={t('subs.searchPlaceholder')}
             />
           </div>
 
@@ -132,10 +133,10 @@ export function SubscriptionsPage() {
             <Select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              aria-label="Filter by category"
+              aria-label={t('subs.allCategories')}
               className="sm:w-40"
             >
-              <option value="all">All Categories</option>
+              <option value="all">{t('subs.allCategories')}</option>
               {SUBSCRIPTION_CATEGORIES.map((cat) => (
                 <option key={cat} value={cat}>
                   {cat}
@@ -148,25 +149,25 @@ export function SubscriptionsPage() {
               onChange={(e) =>
                 setStatusFilter(e.target.value as 'all' | SubscriptionStatus)
               }
-              aria-label="Filter by status"
+              aria-label={t('subs.allStatus')}
               className="sm:w-32"
             >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="paused">Paused</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="all">{t('subs.allStatus')}</option>
+              <option value="active">{t('common.status.active')}</option>
+              <option value="paused">{t('common.status.paused')}</option>
+              <option value="cancelled">{t('common.status.cancelled')}</option>
             </Select>
 
             <Select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              aria-label="Sort subscriptions"
+              aria-label={t('subs.sortNext')}
               className="col-span-2 sm:w-44"
             >
-              <option value="next_billing_asc">Next billing (soonest)</option>
-              <option value="price_desc">Price (highest first)</option>
-              <option value="price_asc">Price (lowest first)</option>
-              <option value="name_asc">Name (A–Z)</option>
+              <option value="next_billing_asc">{t('subs.sortNext')}</option>
+              <option value="price_desc">{t('subs.sortPriceDesc')}</option>
+              <option value="price_asc">{t('subs.sortPriceAsc')}</option>
+              <option value="name_asc">{t('subs.sortNameAsc')}</option>
             </Select>
 
             <div
@@ -178,8 +179,8 @@ export function SubscriptionsPage() {
                 type="button"
                 onClick={() => setViewMode('grid')}
                 aria-pressed={viewMode === 'grid'}
-                aria-label="Card grid view"
-                title="Card grid view"
+                aria-label={t('subs.viewGrid')}
+                title={t('subs.viewGrid')}
                 className={`rounded-md p-1.5 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                   viewMode === 'grid'
                     ? 'bg-accent text-foreground'
@@ -192,8 +193,8 @@ export function SubscriptionsPage() {
                 type="button"
                 onClick={() => setViewMode('table')}
                 aria-pressed={viewMode === 'table'}
-                aria-label="Table view"
-                title="Table view"
+                aria-label={t('subs.viewTable')}
+                title={t('subs.viewTable')}
                 className={`rounded-md p-1.5 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                   viewMode === 'table'
                     ? 'bg-accent text-foreground'
@@ -209,9 +210,10 @@ export function SubscriptionsPage() {
 
       <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
         <span>
-          Showing <strong className="text-foreground tabular-nums">{filtered.length}</strong> of{' '}
-          <strong className="text-foreground tabular-nums">{subscriptions.length}</strong>{' '}
-          subscription{subscriptions.length === 1 ? '' : 's'}
+          {t('subs.showingCount', {
+            shown: formatNumber(filtered.length),
+            total: formatNumber(subscriptions.length),
+          })}
         </span>
       </div>
 
@@ -219,11 +221,9 @@ export function SubscriptionsPage() {
       {filtered.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
-            <p className="text-sm font-medium">No matching subscriptions</p>
+            <p className="text-sm font-medium">{t('subs.noMatching')}</p>
             <p className="text-xs text-muted-foreground">
-              {subscriptions.length === 0
-                ? 'Start tracking your recurring services in one place.'
-                : 'Try clearing your search or category/status filters.'}
+              {subscriptions.length === 0 ? t('subs.emptyDesc') : t('subs.filterEmptyDesc')}
             </p>
             {subscriptions.length === 0 ? (
               <Button
@@ -233,7 +233,7 @@ export function SubscriptionsPage() {
                   setFormOpen(true)
                 }}
               >
-                <Plus className="h-4 w-4" aria-hidden="true" /> Add Subscription
+                <Plus className="h-4 w-4" aria-hidden="true" /> {t('common.addSubscription')}
               </Button>
             ) : (
               <Button
@@ -245,7 +245,7 @@ export function SubscriptionsPage() {
                   setStatusFilter('all')
                 }}
               >
-                Reset Filters
+                {t('subs.resetFilters')}
               </Button>
             )}
           </CardContent>
@@ -256,13 +256,13 @@ export function SubscriptionsPage() {
             <table className="w-full text-left text-sm">
               <thead className="border-b border-border bg-muted/40 text-xs text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Service</th>
-                  <th className="px-4 py-3 font-medium">Category</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Interval</th>
-                  <th className="px-4 py-3 font-medium">Next Billing</th>
-                  <th className="px-4 py-3 font-medium text-right">Price</th>
-                  <th className="px-4 py-3 font-medium text-right">Actions</th>
+                  <th className="px-4 py-3 font-medium">{t('subs.colService')}</th>
+                  <th className="px-4 py-3 font-medium">{t('subs.colCategory')}</th>
+                  <th className="px-4 py-3 font-medium">{t('subs.colStatus')}</th>
+                  <th className="px-4 py-3 font-medium">{t('subs.colInterval')}</th>
+                  <th className="px-4 py-3 font-medium">{t('subs.colNextBilling')}</th>
+                  <th className="px-4 py-3 font-medium text-right">{t('subs.colPrice')}</th>
+                  <th className="px-4 py-3 font-medium text-right">{t('subs.colActions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -293,16 +293,16 @@ export function SubscriptionsPage() {
                               : 'destructive'
                         }
                       >
-                        {sub.status}
+                        {t(`common.status.${sub.status}`)}
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">
                       {sub.billingInterval === 'custom'
-                        ? `Every ${sub.customIntervalDays ?? 30}d`
-                        : BILLING_INTERVAL_LABELS[sub.billingInterval]}
+                        ? t('interval.everyNDays', { days: sub.customIntervalDays ?? 30 })
+                        : t(`interval.${sub.billingInterval}`)}
                     </td>
                     <td className="px-4 py-3 text-xs tabular-nums">
-                      {sub.status === 'cancelled' ? '—' : sub.nextBillingDate}
+                      {sub.status === 'cancelled' ? '—' : formatDate(sub.nextBillingDate)}
                     </td>
                     <td className="px-4 py-3 text-right font-semibold tabular-nums">
                       {formatCurrency(sub.price, sub.currency)}
@@ -397,7 +397,7 @@ export function SubscriptionsPage() {
                           : 'destructive'
                     }
                   >
-                    {sub.status}
+                    {t(`common.status.${sub.status}`)}
                   </Badge>
                 </div>
 
@@ -408,16 +408,16 @@ export function SubscriptionsPage() {
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {sub.billingInterval === 'custom'
-                        ? `Every ${sub.customIntervalDays ?? 30} days`
-                        : BILLING_INTERVAL_LABELS[sub.billingInterval]}
+                        ? t('interval.everyNDays', { days: sub.customIntervalDays ?? 30 })
+                        : t(`interval.${sub.billingInterval}`)}
                     </div>
                   </div>
                   <div className="text-right">
                     <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                      Next Billing
+                      {t('subs.nextBilling')}
                     </div>
                     <div className="text-xs font-medium tabular-nums">
-                      {sub.status === 'cancelled' ? '—' : sub.nextBillingDate}
+                      {sub.status === 'cancelled' ? '—' : formatDate(sub.nextBillingDate)}
                     </div>
                   </div>
                 </div>
@@ -458,7 +458,7 @@ export function SubscriptionsPage() {
                       title={`Edit ${sub.serviceName}`}
                     >
                       <Edit2 className="h-3.5 w-3.5" aria-hidden="true" />
-                      Edit
+                      {t('common.edit')}
                     </Button>
                     <Button
                       variant="ghost"
@@ -489,7 +489,7 @@ export function SubscriptionsPage() {
                       to={`/subscriptions/${sub.id}`}
                       className="rounded text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      Details
+                      {t('common.details')}
                     </Link>
                   </div>
                 </div>

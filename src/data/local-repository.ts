@@ -1,4 +1,11 @@
-import { addIntervalToDate, calculateNextBillingDate, todayIsoDate } from '@/lib/billing-engine'
+import {
+  addIntervalToDate,
+  calculateNextBillingDate,
+  DuplicateBillingCycleError,
+  findDuplicatePaidCycle,
+  getBillingCycleKey,
+  todayIsoDate,
+} from '@/lib/billing-engine'
 import {
   applyEarlySettlement,
   applyInstallmentPayment,
@@ -357,6 +364,7 @@ function buildInstallmentSeedData(): {
 
 export class LocalSubTrackRepository implements SubTrackRepository {
   readonly mode = 'local' as const
+  private inFlightPayments = new Set<string>()
 
   async listSubscriptions(): Promise<Subscription[]> {
     ensureSeeded()
@@ -407,9 +415,16 @@ export class LocalSubTrackRepository implements SubTrackRepository {
     const billingDay =
       patch.billingDay ??
       (patch.startDate ? Number(startDate.split('-')[2]) : target.billingDay)
+    const scheduleChanged =
+      patch.startDate !== undefined ||
+      patch.billingInterval !== undefined ||
+      patch.customIntervalDays !== undefined ||
+      patch.billingDay !== undefined
     const nextBillingDate =
       patch.nextBillingDate ??
-      calculateNextBillingDate(startDate, billingInterval, customIntervalDays, billingDay)
+      (scheduleChanged
+        ? calculateNextBillingDate(startDate, billingInterval, customIntervalDays, billingDay)
+        : target.nextBillingDate)
 
     const updated: Subscription = {
       ...target,
@@ -454,6 +469,32 @@ export class LocalSubTrackRepository implements SubTrackRepository {
   async addBillingHistory(
     entry: Omit<BillingHistoryEntry, 'id' | 'createdAt'>,
   ): Promise<BillingHistoryEntry> {
+    if (entry.status === 'paid') {
+      if (this.inFlightPayments.has(entry.subscriptionId)) {
+        throw new DuplicateBillingCycleError(entry.billedAt)
+      }
+      this.inFlightPayments.add(entry.subscriptionId)
+      try {
+        const [subscriptions, existing] = await Promise.all([
+          this.listSubscriptions(),
+          this.listBillingHistory(),
+        ])
+        const sub = subscriptions.find((s) => s.id === entry.subscriptionId)
+        if (sub && findDuplicatePaidCycle(sub, entry.billedAt, existing)) {
+          throw new DuplicateBillingCycleError(getBillingCycleKey(sub, entry.billedAt))
+        }
+        const created: BillingHistoryEntry = {
+          ...entry,
+          id: generateId(),
+          createdAt: new Date().toISOString(),
+        }
+        writeStorage(STORAGE_KEYS.history, [created, ...existing])
+        return created
+      } finally {
+        this.inFlightPayments.delete(entry.subscriptionId)
+      }
+    }
+
     const existing = await this.listBillingHistory()
     const created: BillingHistoryEntry = {
       ...entry,

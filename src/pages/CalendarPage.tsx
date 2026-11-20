@@ -5,13 +5,12 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ServiceIcon } from '@/components/subscriptions/ServiceIcon'
+import { useI18n } from '@/hooks/useI18n'
 import { useSubTrack } from '@/hooks/useSubTrack'
 import { getDaysInMonth, getRenewalsInMonth, todayIsoDate } from '@/lib/billing-engine'
 import { convertCurrency, formatCompactCurrency, formatCurrency } from '@/lib/currency'
 import { getEffectiveItemStatus } from '@/lib/installment-engine'
 import { cn } from '@/lib/utils'
-
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const
 
 interface CalendarEvent {
   id: string
@@ -27,6 +26,7 @@ interface CalendarEvent {
 }
 
 export function CalendarPage() {
+  const { t, formatDate, formatMonthYear, formatNumber, getWeekdays } = useI18n()
   const { subscriptions, installmentPlans, installmentItems, settings } = useSubTrack()
   const now = new Date()
   const [year, setYear] = React.useState(now.getFullYear())
@@ -47,7 +47,7 @@ export function CalendarPage() {
       kind: 'subscription',
       date: ev.date,
       title: ev.subscription.serviceName,
-      subtitle: 'Subscription',
+      subtitle: t('cal.subLabel'),
       amount: ev.subscription.price,
       currency: ev.subscription.currency,
       href: `/subscriptions/${ev.subscription.id}`,
@@ -88,6 +88,7 @@ export function CalendarPage() {
     monthPrefix,
     settings.includePausedInEstimates,
     today,
+    t,
   ])
 
   const eventsByDate = React.useMemo(() => {
@@ -116,11 +117,8 @@ export function CalendarPage() {
 
   const firstWeekday = new Date(Date.UTC(year, month - 1, 1)).getUTCDay()
   const daysInMonth = getDaysInMonth(year, month)
-  const monthLabel = new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString('en-US', {
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  })
+  const monthLabel = formatMonthYear(year, month - 1)
+  const weekdays = React.useMemo(() => getWeekdays('short', 0), [getWeekdays])
 
   function goPrevMonth() {
     setSelectedDate(null)
@@ -149,10 +147,10 @@ export function CalendarPage() {
           <div>
             <CardTitle className="text-base">{monthLabel}</CardTitle>
             <CardDescription>
-              {events.length} due item(s) · Total{' '}
-              <span className="font-medium text-foreground tabular-nums">
-                {formatCurrency(Math.round(monthTotal), settings.defaultCurrency)}
-              </span>
+              {t('cal.dueSummary', {
+                count: formatNumber(events.length),
+                total: formatCurrency(Math.round(monthTotal), settings.defaultCurrency),
+              })}
             </CardDescription>
           </div>
           <div className="flex items-center gap-1.5">
@@ -160,7 +158,7 @@ export function CalendarPage() {
               variant="outline"
               size="icon"
               onClick={goPrevMonth}
-              aria-label="Previous month"
+              aria-label={t('cal.prevMonth')}
             >
               <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             </Button>
@@ -173,13 +171,13 @@ export function CalendarPage() {
                 setMonth(now.getMonth() + 1)
               }}
             >
-              Today
+              {t('common.today')}
             </Button>
             <Button
               variant="outline"
               size="icon"
               onClick={goNextMonth}
-              aria-label="Next month"
+              aria-label={t('cal.nextMonth')}
             >
               <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </Button>
@@ -188,7 +186,7 @@ export function CalendarPage() {
 
         <CardContent>
           <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-muted-foreground mb-2">
-            {WEEKDAYS.map((day) => (
+            {weekdays.map((day) => (
               <div key={day} className="py-1">
                 {day}
               </div>
@@ -262,7 +260,7 @@ export function CalendarPage() {
                     ))}
                     {dayEvents.length > 2 && (
                       <div className="px-1 text-[10px] text-muted-foreground">
-                        +{dayEvents.length - 2} more
+                        {t('cal.moreCount', { count: formatNumber(dayEvents.length - 2) })}
                       </div>
                     )}
                   </div>
@@ -277,10 +275,12 @@ export function CalendarPage() {
         <CardHeader className="flex flex-row items-start justify-between gap-2">
           <div>
             <CardTitle>
-              {selectedDate ? `Due on ${selectedDate}` : `Scheduled in ${monthLabel}`}
+              {selectedDate
+                ? t('cal.dueOn', { date: formatDate(selectedDate) })
+                : t('cal.scheduledIn', { month: monthLabel })}
             </CardTitle>
             <CardDescription>
-              {selectedDate ? 'Filtered by selected date' : 'Subscriptions & installments due'}
+              {selectedDate ? t('cal.filteredDate') : t('cal.subsAndInstDue')}
             </CardDescription>
           </div>
           {selectedDate && (
@@ -288,19 +288,17 @@ export function CalendarPage() {
               variant="ghost"
               size="sm"
               onClick={() => setSelectedDate(null)}
-              aria-label="Clear date filter"
+              aria-label={t('cal.clearDateFilter')}
             >
               <X className="h-3.5 w-3.5" aria-hidden="true" />
-              All
+              {t('common.all')}
             </Button>
           )}
         </CardHeader>
         <CardContent>
           {displayedEvents.length === 0 ? (
             <p className="py-8 text-center text-xs text-muted-foreground">
-              {selectedDate
-                ? 'No items scheduled on this date.'
-                : 'No items scheduled for this month.'}
+              {selectedDate ? t('cal.noItemsDate') : t('cal.noItemsMonth')}
             </p>
           ) : (
             <div className="divide-y divide-border">
@@ -320,13 +318,13 @@ export function CalendarPage() {
                       />
                     ) : (
                       <Badge variant="secondary" className="shrink-0 text-[10px]">
-                        CICIL
+                        {t('cal.instBadge')}
                       </Badge>
                     )}
                     <div className="min-w-0">
                       <div className="truncate text-sm font-medium">{ev.title}</div>
                       <div className="text-xs text-muted-foreground tabular-nums">
-                        {ev.date} · {ev.subtitle}
+                        {formatDate(ev.date)} · {ev.subtitle}
                       </div>
                     </div>
                   </div>

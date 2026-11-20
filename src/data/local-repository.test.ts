@@ -178,6 +178,49 @@ describe('LocalSubTrackRepository.updateInstallmentPlan', () => {
     expect(r2.items[0].scheduledAmount).toBe(300000)
   })
 
+  it('persists updated firstDueDate (Nov 18 -> Dec 4) and recalculated schedule across save/reopen', async () => {
+    seedAll()
+    const repo = new LocalSubTrackRepository()
+    const created = await repo.createInstallmentPlan({
+      ...validInput(),
+      startDate: '2026-11-04',
+      firstDueDate: '2026-11-18',
+      schedule: [
+        { installmentNumber: 1, dueDate: '2026-11-18', scheduledAmount: 550000 },
+        { installmentNumber: 2, dueDate: '2026-12-18', scheduledAmount: 550000 },
+        { installmentNumber: 3, dueDate: '2027-01-18', scheduledAmount: 550000 },
+      ],
+    })
+
+    const updated = await repo.updateInstallmentPlan(created.plan.id, {
+      ...validInput(),
+      startDate: '2026-11-04',
+      firstDueDate: '2026-12-04',
+      schedule: [
+        { installmentNumber: 1, dueDate: '2026-12-04', scheduledAmount: 550000 },
+        { installmentNumber: 2, dueDate: '2027-01-04', scheduledAmount: 550000 },
+        { installmentNumber: 3, dueDate: '2027-02-04', scheduledAmount: 550000 },
+      ],
+    })
+
+    expect(updated.plan.firstDueDate).toBe('2026-12-04')
+    expect(updated.items.map((i) => i.dueDate)).toEqual([
+      '2026-12-04',
+      '2027-01-04',
+      '2027-02-04',
+    ])
+
+    // Reopen from storage
+    const reloadedPlans = await repo.listInstallmentPlans()
+    const reloadedItems = await repo.listInstallmentItems(created.plan.id)
+    expect(reloadedPlans[0].firstDueDate).toBe('2026-12-04')
+    expect(reloadedItems.map((i) => i.dueDate)).toEqual([
+      '2026-12-04',
+      '2027-01-04',
+      '2027-02-04',
+    ])
+  })
+
   it('rejects lowering scheduled amount below already paid amount', async () => {
     const plan = makePlan('p1')
     const items = [
@@ -300,5 +343,127 @@ describe('LocalSubTrackRepository.cancelInstallmentPlan', () => {
     const payments = await repo.listInstallmentPayments('p1')
     expect(payments).toHaveLength(1)
     expect(payments[0].id).toBe('pay-1')
+  })
+})
+
+describe('LocalSubTrackRepository.updateSubscription', () => {
+  it('advances and preserves nextBillingDate when recording payment and editing non-schedule fields', async () => {
+    seedAll()
+    const repo = new LocalSubTrackRepository()
+    const created = await repo.createSubscription({
+      serviceName: 'Gemini',
+      category: 'AI & Tools',
+      price: 77000,
+      currency: 'IDR',
+      billingInterval: 'monthly',
+      customIntervalDays: null,
+      startDate: '2026-11-18',
+      paymentMethod: 'GoPay',
+      websiteUrl: null,
+      notes: null,
+      status: 'active',
+      nextBillingDate: '2026-11-18',
+    })
+
+    const advanced = await repo.updateSubscription(created.id, {
+      nextBillingDate: '2026-12-18',
+    })
+    expect(advanced.nextBillingDate).toBe('2026-12-18')
+
+    // Editing notes must not reset nextBillingDate back to 2026-11-18
+    const editedNotes = await repo.updateSubscription(created.id, {
+      notes: 'Paid November cycle',
+    })
+    expect(editedNotes.nextBillingDate).toBe('2026-12-18')
+    expect(editedNotes.notes).toBe('Paid November cycle')
+  })
+})
+
+describe('LocalSubTrackRepository.addBillingHistory (duplicate prevention)', () => {
+  it('allows first cycle payment, rejects duplicate & same-cycle different-date attempts, and protects concurrent calls', async () => {
+    seedAll()
+    const repo = new LocalSubTrackRepository()
+    const gemini = await repo.createSubscription({
+      serviceName: 'Gemini',
+      category: 'AI & Tools',
+      price: 77000,
+      currency: 'IDR',
+      billingInterval: 'monthly',
+      customIntervalDays: null,
+      startDate: '2026-11-18',
+      paymentMethod: 'GoPay',
+      websiteUrl: null,
+      notes: null,
+      status: 'active',
+      nextBillingDate: '2026-11-18',
+    })
+    const spotify = await repo.createSubscription({
+      serviceName: 'Spotify',
+      category: 'Music & Audio',
+      price: 71500,
+      currency: 'IDR',
+      billingInterval: 'monthly',
+      customIntervalDays: null,
+      startDate: '2026-11-18',
+      paymentMethod: 'GoPay',
+      websiteUrl: null,
+      notes: null,
+      status: 'active',
+      nextBillingDate: '2026-11-18',
+    })
+
+    // 1. Concurrent rapid submissions for the same cycle: only 1 succeeds
+    const concurrentResults = await Promise.allSettled([
+      repo.addBillingHistory({
+        subscriptionId: gemini.id,
+        amount: 77000,
+        currency: 'IDR',
+        billedAt: '2026-11-18',
+        status: 'paid',
+      }),
+      repo.addBillingHistory({
+        subscriptionId: gemini.id,
+        amount: 77000,
+        currency: 'IDR',
+        billedAt: '2026-11-18',
+        status: 'paid',
+      }),
+    ])
+    expect(concurrentResults.filter((r) => r.status === 'fulfilled')).toHaveLength(1)
+    expect(concurrentResults.filter((r) => r.status === 'rejected')).toHaveLength(1)
+
+    // 2. Second payment for same cycle with different paidAt (Nov 25) is rejected
+    await expect(
+      repo.addBillingHistory({
+        subscriptionId: gemini.id,
+        amount: 77000,
+        currency: 'IDR',
+        billedAt: '2026-11-25',
+        status: 'paid',
+      }),
+    ).rejects.toThrow(/already been paid/i)
+
+    // 3. Different subscription can be paid independently
+    const spotifyPay = await repo.addBillingHistory({
+      subscriptionId: spotify.id,
+      amount: 71500,
+      currency: 'IDR',
+      billedAt: '2026-11-18',
+      status: 'paid',
+    })
+    expect(spotifyPay.subscriptionId).toBe(spotify.id)
+
+    // 4. Legitimate payment for next billing cycle (Dec 18) is allowed
+    const decPay = await repo.addBillingHistory({
+      subscriptionId: gemini.id,
+      amount: 77000,
+      currency: 'IDR',
+      billedAt: '2026-12-18',
+      status: 'paid',
+    })
+    expect(decPay.billedAt).toBe('2026-12-18')
+
+    const geminiHistory = await repo.listBillingHistory(gemini.id)
+    expect(geminiHistory).toHaveLength(2)
   })
 })

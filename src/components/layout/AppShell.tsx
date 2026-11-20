@@ -8,43 +8,60 @@ import {
   Landmark,
   LayoutDashboard,
   Layers,
+  LogOut,
   Menu,
   Plus,
   Settings,
   X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { SubscriptionFormDialog } from '@/components/subscriptions/SubscriptionFormDialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { InstallmentFormDialog } from '@/components/installments/InstallmentFormDialog'
+import { useAuth } from '@/hooks/useAuth'
+import { useI18n } from '@/hooks/useI18n'
 import { useSubTrack } from '@/hooks/useSubTrack'
+import type { TranslationKey } from '@/i18n/translations'
 import { diffDays, getEffectiveNextBillingDate, matchesReminderWindow, todayIsoDate } from '@/lib/billing-engine'
 import { getInstallmentAlerts } from '@/lib/installment-engine'
 import { cn } from '@/lib/utils'
 
-const NAV_ITEMS = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/subscriptions', label: 'My Subscriptions', icon: CreditCard },
-  { to: '/installments', label: 'Installments', icon: Landmark },
-  { to: '/calendar', label: 'Calendar', icon: CalendarDays },
-  { to: '/analytics', label: 'Analytics', icon: BarChart3 },
-  { to: '/notifications', label: 'Notifications', icon: Bell },
-  { to: '/settings', label: 'Settings', icon: Settings },
-] as const
+const NAV_ITEMS: readonly { to: string; labelKey: TranslationKey; icon: typeof LayoutDashboard }[] = [
+  { to: '/', labelKey: 'nav.dashboard', icon: LayoutDashboard },
+  { to: '/subscriptions', labelKey: 'nav.subscriptions', icon: CreditCard },
+  { to: '/installments', labelKey: 'nav.installments', icon: Landmark },
+  { to: '/calendar', labelKey: 'nav.calendar', icon: CalendarDays },
+  { to: '/analytics', labelKey: 'nav.analytics', icon: BarChart3 },
+  { to: '/notifications', labelKey: 'nav.notifications', icon: Bell },
+  { to: '/settings', labelKey: 'nav.settings', icon: Settings },
+]
 
-const PAGE_TITLES: Record<string, string> = {
-  '/': 'Dashboard',
-  '/subscriptions': 'My Subscriptions',
-  '/installments': 'Installments & PayLater',
-  '/calendar': 'Calendar',
-  '/analytics': 'Analytics',
-  '/notifications': 'Notifications',
-  '/settings': 'Settings',
+const PAGE_TITLE_KEYS: Record<string, TranslationKey> = {
+  '/': 'nav.dashboard',
+  '/subscriptions': 'nav.subscriptions',
+  '/installments': 'nav.installmentsTitle',
+  '/calendar': 'nav.calendar',
+  '/analytics': 'nav.analytics',
+  '/notifications': 'nav.notifications',
+  '/settings': 'nav.settings',
 }
 
 export function AppShell() {
   const { pathname } = useLocation()
-  const { mode, subscriptions, installmentPlans, installmentItems, notificationPrefs } = useSubTrack()
+  const { t } = useI18n()
+  const { status: authStatus, user, isSupabaseConfigured, signOut, exitLocalMode } = useAuth()
+  const { mode, subscriptions, billingHistory, installmentPlans, installmentItems, notificationPrefs } = useSubTrack()
   const [mobileOpen, setMobileOpen] = React.useState(false)
-  const [addOpen, setAddOpen] = React.useState(false)
+  const [addInstallmentOpen, setAddInstallmentOpen] = React.useState(false)
+  const [logoutOpen, setLogoutOpen] = React.useState(false)
+  const [signingOut, setSigningOut] = React.useState(false)
+  const isInstallmentsRoute =
+    pathname === '/installments' || pathname.startsWith('/installments/')
 
   React.useEffect(() => {
     if (!mobileOpen) return
@@ -60,7 +77,7 @@ export function AppShell() {
     if (!notificationPrefs.inAppAlertsEnabled) return 0
     const subAlerts = subscriptions.filter((sub) => {
       if (sub.status !== 'active') return false
-      const nextDate = getEffectiveNextBillingDate(sub, today)
+      const nextDate = getEffectiveNextBillingDate(sub, today, billingHistory)
       return matchesReminderWindow(diffDays(today, nextDate), notificationPrefs)
     }).length
     const instAlerts = getInstallmentAlerts(installmentPlans, installmentItems, today, 7)
@@ -70,13 +87,15 @@ export function AppShell() {
       instAlerts.dueToday.length +
       instAlerts.upcoming.length
     )
-  }, [subscriptions, installmentPlans, installmentItems, notificationPrefs, today])
+  }, [subscriptions, billingHistory, installmentPlans, installmentItems, notificationPrefs, today])
 
   const pageTitle = pathname.startsWith('/subscriptions/')
-    ? 'Subscription Details'
+    ? t('nav.subscriptionDetails')
     : pathname.startsWith('/installments/')
-      ? 'Installment Details'
-      : (PAGE_TITLES[pathname] ?? 'SubTrack')
+      ? t('nav.installmentDetails')
+      : PAGE_TITLE_KEYS[pathname]
+        ? t(PAGE_TITLE_KEYS[pathname])
+        : 'SubTrack'
 
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
@@ -88,12 +107,12 @@ export function AppShell() {
           </div>
           <div>
             <div className="text-sm font-semibold tracking-tight">SubTrack</div>
-            <div className="text-[11px] text-muted-foreground">Zero surprises</div>
+            <div className="text-[11px] text-muted-foreground">{t('app.tagline')}</div>
           </div>
         </div>
 
         <nav className="flex-1 space-y-1 p-3" aria-label="Primary navigation">
-          {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+          {NAV_ITEMS.map(({ to, labelKey, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
@@ -109,7 +128,7 @@ export function AppShell() {
             >
               <span className="flex items-center gap-2.5">
                 <Icon className="h-4 w-4" aria-hidden="true" />
-                {label}
+                {t(labelKey)}
               </span>
               {to === '/notifications' && alertCount > 0 && (
                 <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 tabular-nums">
@@ -120,13 +139,40 @@ export function AppShell() {
           ))}
         </nav>
 
-        <div className="border-t border-border p-4">
+        <div className="border-t border-border p-4 space-y-2">
           <div className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 text-xs">
-            <span className="text-muted-foreground">Storage</span>
+            <span className="text-muted-foreground">{t('storage.label')}</span>
             <span className="font-medium text-emerald-700 dark:text-emerald-400">
-              {mode === 'supabase' ? 'Supabase' : 'Local Mode'}
+              {mode === 'supabase' ? t('storage.cloud') : t('storage.local')}
             </span>
           </div>
+          {authStatus === 'authenticated' && user?.email && (
+            <div className="flex items-center justify-between gap-2 px-1 text-xs">
+              <span className="truncate text-muted-foreground" title={user.email}>
+                {user.email}
+              </span>
+              <button
+                type="button"
+                onClick={() => setLogoutOpen(true)}
+                aria-label={t('auth.signOut')}
+                title={t('auth.signOut')}
+                className="shrink-0 rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer"
+              >
+                <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
+              </button>
+            </div>
+          )}
+          {authStatus === 'local' && isSupabaseConfigured && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full text-xs"
+              onClick={exitLocalMode}
+            >
+              {t('auth.signInToCloud')}
+            </Button>
+          )}
         </div>
       </aside>
 
@@ -152,7 +198,7 @@ export function AppShell() {
               </div>
               <button
                 type="button"
-                aria-label="Close navigation"
+                aria-label={t('nav.closeMenu')}
                 onClick={() => setMobileOpen(false)}
                 className="rounded-md p-2 text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
               >
@@ -160,7 +206,7 @@ export function AppShell() {
               </button>
             </div>
             <nav className="flex-1 space-y-1 p-3" aria-label="Mobile navigation">
-              {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+              {NAV_ITEMS.map(({ to, labelKey, icon: Icon }) => (
                 <NavLink
                   key={to}
                   to={to}
@@ -177,7 +223,7 @@ export function AppShell() {
                 >
                   <span className="flex items-center gap-2.5">
                     <Icon className="h-4 w-4" aria-hidden="true" />
-                    {label}
+                    {t(labelKey)}
                   </span>
                   {to === '/notifications' && alertCount > 0 && (
                     <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
@@ -197,8 +243,8 @@ export function AppShell() {
           <div className="flex items-center gap-3">
             <button
               type="button"
-              aria-label="Open navigation"
-              title="Open navigation"
+              aria-label={t('nav.openMenu')}
+              title={t('nav.openMenu')}
               onClick={() => setMobileOpen(true)}
               className="rounded-lg border border-border p-2 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden cursor-pointer"
             >
@@ -207,10 +253,12 @@ export function AppShell() {
             <h1 className="text-base font-semibold tracking-tight sm:text-lg">{pageTitle}</h1>
           </div>
 
-          <Button size="sm" onClick={() => setAddOpen(true)}>
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            <span>Add Subscription</span>
-          </Button>
+          {isInstallmentsRoute && (
+            <Button size="sm" onClick={() => setAddInstallmentOpen(true)}>
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              <span>{t('inst.addPlan')}</span>
+            </Button>
+          )}
         </header>
 
         <main className="flex-1 overflow-y-auto">
@@ -220,7 +268,42 @@ export function AppShell() {
         </main>
       </div>
 
-      <SubscriptionFormDialog open={addOpen} onOpenChange={setAddOpen} />
+      <InstallmentFormDialog open={addInstallmentOpen} onOpenChange={setAddInstallmentOpen} />
+
+      <Dialog open={logoutOpen} onOpenChange={setLogoutOpen}>
+        <DialogContent onClose={() => setLogoutOpen(false)} className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t('auth.signOutTitle')}</DialogTitle>
+            <DialogDescription>{t('auth.signOutDesc')}</DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setLogoutOpen(false)}
+              disabled={signingOut}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={signingOut}
+              onClick={async () => {
+                setSigningOut(true)
+                try {
+                  await signOut()
+                  setLogoutOpen(false)
+                } finally {
+                  setSigningOut(false)
+                }
+              }}
+            >
+              {signingOut ? t('auth.signingOut') : t('auth.signOut')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

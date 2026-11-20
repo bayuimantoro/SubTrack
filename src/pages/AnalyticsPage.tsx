@@ -14,7 +14,9 @@ import {
 } from 'recharts'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ServiceIcon } from '@/components/subscriptions/ServiceIcon'
+import { useI18n } from '@/hooks/useI18n'
 import { useSubTrack } from '@/hooks/useSubTrack'
+import { LOCALE_BCP47 } from '@/i18n/translations'
 import {
   calculateSpendingSummary,
   getRenewalsInMonth,
@@ -24,7 +26,6 @@ import {
 } from '@/lib/billing-engine'
 import { convertCurrency, formatCompactCurrency, formatCurrency } from '@/lib/currency'
 import { calculateInstallmentsSummary } from '@/lib/installment-engine'
-import { BILLING_INTERVAL_LABELS } from '@/types/subscription'
 
 const TOOLTIP_STYLE = {
   backgroundColor: 'var(--bg-elevated)',
@@ -35,6 +36,7 @@ const TOOLTIP_STYLE = {
 }
 
 export function AnalyticsPage() {
+  const { locale, t, formatNumber } = useI18n()
   const {
     subscriptions,
     billingHistory,
@@ -92,12 +94,12 @@ export function AnalyticsPage() {
         0,
       )
       items.push({
-        label: dt.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+        label: dt.toLocaleDateString(LOCALE_BCP47[locale], { month: 'short', year: '2-digit' }),
         amount: Math.round(total),
       })
     }
     return items
-  }, [subscriptions, currency, settings.includePausedInEstimates])
+  }, [subscriptions, currency, settings.includePausedInEstimates, locale])
 
   const thisMonth = monthSeries[0]?.amount ?? 0
   const nextMonth = monthSeries[1]?.amount ?? 0
@@ -125,7 +127,7 @@ export function AnalyticsPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground">
-              Normalized Monthly Rate
+              {t('ana.normalizedMonthly')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -133,7 +135,7 @@ export function AnalyticsPage() {
               {formatCurrency(summary.monthlyTotal, currency)}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Estimated annual: {formatCurrency(summary.annualEstimate, currency)}
+              {t('ana.estimatedAnnual', { amount: formatCurrency(summary.annualEstimate, currency) })}
             </p>
           </CardContent>
         </Card>
@@ -141,7 +143,7 @@ export function AnalyticsPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground">
-              This Month vs Next Month
+              {t('ana.thisVsNext')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -167,7 +169,7 @@ export function AnalyticsPage() {
               </span>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Current month due: {formatCurrency(thisMonth, currency)}
+              {t('ana.currentMonthDue', { amount: formatCurrency(thisMonth, currency) })}
             </p>
           </CardContent>
         </Card>
@@ -175,7 +177,7 @@ export function AnalyticsPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground">
-              Actual vs Estimated
+              {t('ana.actualVsEstimated')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -183,7 +185,9 @@ export function AnalyticsPage() {
               {formatCurrency(summary.actualTotalSpent, currency)}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Verified paid history vs {formatCurrency(summary.annualEstimate, currency)}/yr est.
+              {t('ana.verifiedVsAnnual', {
+                amount: formatCurrency(summary.annualEstimate, currency),
+              })}
             </p>
           </CardContent>
         </Card>
@@ -193,13 +197,13 @@ export function AnalyticsPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>6-Month Cashflow Trend</CardTitle>
-            <CardDescription>Actual scheduled renewals per month</CardDescription>
+            <CardTitle>{t('ana.cashflowTrend')}</CardTitle>
+            <CardDescription>{t('ana.actualRenewals')}</CardDescription>
           </CardHeader>
           <CardContent
             className="h-72"
             role="region"
-            aria-label="6-month cashflow trend chart"
+            aria-label={t('ana.cashflowTrend')}
           >
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={monthSeries} margin={{ top: 8, right: 8, left: 4, bottom: 0 }}>
@@ -215,7 +219,7 @@ export function AnalyticsPage() {
                   contentStyle={TOOLTIP_STYLE}
                   formatter={(value) => [
                     formatCurrency(Number(value ?? 0), currency),
-                    'Scheduled',
+                    t('chart.scheduled'),
                   ]}
                 />
                 <Area
@@ -233,17 +237,17 @@ export function AnalyticsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Category Breakdown</CardTitle>
-            <CardDescription>Normalized monthly cost by category</CardDescription>
+            <CardTitle>{t('ana.categoryBreakdown')}</CardTitle>
+            <CardDescription>{t('ana.normalizedCategory')}</CardDescription>
           </CardHeader>
           <CardContent
             className="h-72"
             role="region"
-            aria-label="Monthly spending by category chart"
+            aria-label={t('ana.categoryBreakdown')}
           >
             {summary.byCategory.length === 0 ? (
               <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
-                No active categories to chart.
+                {t('ana.noCategories')}
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
@@ -267,7 +271,7 @@ export function AnalyticsPage() {
                     contentStyle={TOOLTIP_STYLE}
                     formatter={(value) => [
                       formatCurrency(Number(value ?? 0), currency),
-                      'Monthly',
+                      t('chart.monthly'),
                     ]}
                   />
                   <Bar dataKey="monthlyAmount" fill="#3b82f6" radius={[0, 6, 6, 0]} />
@@ -281,15 +285,13 @@ export function AnalyticsPage() {
       {/* Most Expensive Subscriptions */}
       <Card>
         <CardHeader>
-          <CardTitle>Most Expensive Subscriptions</CardTitle>
-          <CardDescription>
-            Ranked by normalized monthly cost in {currency}
-          </CardDescription>
+          <CardTitle>{t('ana.mostExpensive')}</CardTitle>
+          <CardDescription>{t('ana.rankedMonthly', { currency })}</CardDescription>
         </CardHeader>
         <CardContent>
           {topExpensive.length === 0 ? (
             <p className="py-6 text-center text-xs text-muted-foreground">
-              No active subscriptions found.
+              {t('ana.noActiveSubs')}
             </p>
           ) : (
             <div className="divide-y divide-border">
@@ -312,7 +314,7 @@ export function AnalyticsPage() {
                     <div className="min-w-0">
                       <div className="truncate text-sm font-medium">{sub.serviceName}</div>
                       <div className="text-xs text-muted-foreground">
-                        {sub.category} · {BILLING_INTERVAL_LABELS[sub.billingInterval]}
+                        {sub.category} · {t(`interval.${sub.billingInterval}`)}
                       </div>
                     </div>
                   </div>
@@ -321,7 +323,7 @@ export function AnalyticsPage() {
                       {formatCurrency(monthlyEquivalent, currency)}/mo
                     </div>
                     <div className="text-[11px] text-muted-foreground tabular-nums">
-                      Billed: {formatCurrency(sub.price, sub.currency)}
+                      {t('ana.billed', { amount: formatCurrency(sub.price, sub.currency) })}
                     </div>
                   </div>
                 </Link>
@@ -333,15 +335,13 @@ export function AnalyticsPage() {
 
       {/* Installments & PayLater Analytics */}
       <div className="pt-2 space-y-4">
-        <h2 className="text-base font-semibold tracking-tight">
-          Installments &amp; PayLater Analytics
-        </h2>
+        <h2 className="text-base font-semibold tracking-tight">{t('ana.instSection')}</h2>
 
         <div className="grid gap-4 sm:grid-cols-3">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-xs font-medium text-muted-foreground">
-                Principal vs Financing Costs
+                {t('ana.principalVsFinancing')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -349,7 +349,9 @@ export function AnalyticsPage() {
                 {formatCurrency(instSummary.totalPrincipal, currency)}
               </div>
               <p className="mt-1 text-xs text-amber-700 dark:text-amber-400 tabular-nums">
-                + {formatCurrency(instSummary.totalFinancingCosts, currency)} interest &amp; fees
+                {t('ana.interestAndFees', {
+                  amount: formatCurrency(instSummary.totalFinancingCosts, currency),
+                })}
               </p>
             </CardContent>
           </Card>
@@ -357,7 +359,7 @@ export function AnalyticsPage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-xs font-medium text-muted-foreground">
-                Monthly Installment Obligation
+                {t('ana.monthlyInstObligation')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -365,7 +367,7 @@ export function AnalyticsPage() {
                 {formatCurrency(instSummary.monthlyObligations, currency)}
               </div>
               <p className="mt-1 text-xs text-muted-foreground tabular-nums">
-                Outstanding: {formatCurrency(instSummary.totalOutstandingBalance, currency)}
+                {t('inst.outstanding')}: {formatCurrency(instSummary.totalOutstandingBalance, currency)}
               </p>
             </CardContent>
           </Card>
@@ -373,7 +375,7 @@ export function AnalyticsPage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-xs font-medium text-muted-foreground">
-                Overall Payment Progress
+                {t('ana.overallProgress')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -390,13 +392,13 @@ export function AnalyticsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Outstanding Breakdown by Provider</CardTitle>
-            <CardDescription>Remaining balance and total commitment per provider</CardDescription>
+            <CardTitle>{t('ana.providerBreakdown')}</CardTitle>
+            <CardDescription>{t('ana.providerBreakdownDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             {instSummary.byProvider.length === 0 ? (
               <p className="py-6 text-center text-xs text-muted-foreground">
-                No installment providers recorded yet.
+                {t('ana.noProviders')}
               </p>
             ) : (
               <div className="divide-y divide-border">
@@ -408,7 +410,7 @@ export function AnalyticsPage() {
                     <div>
                       <div className="font-medium">{prov.providerName}</div>
                       <div className="text-xs text-muted-foreground">
-                        {prov.planCount} plan(s)
+                        {t('ana.planCount', { count: formatNumber(prov.planCount) })}
                       </div>
                     </div>
                     <div className="text-right">
@@ -416,7 +418,9 @@ export function AnalyticsPage() {
                         {formatCurrency(prov.outstandingBalance, currency)}
                       </div>
                       <div className="text-[11px] text-muted-foreground tabular-nums">
-                        Total: {formatCurrency(prov.totalRepayment, currency)}
+                        {t('ana.totalPrefix', {
+                          amount: formatCurrency(prov.totalRepayment, currency),
+                        })}
                       </div>
                     </div>
                   </div>

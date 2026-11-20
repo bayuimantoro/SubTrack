@@ -1,9 +1,12 @@
 import * as React from 'react'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { AppShell } from '@/components/layout/AppShell'
 import { Skeleton } from '@/components/ui/skeleton'
+import { AuthProvider, useAuth } from '@/hooks/useAuth'
+import { I18nProvider } from '@/hooks/useI18n'
 import { SubTrackProvider, useSubTrack } from '@/hooks/useSubTrack'
+import { AuthPage } from '@/pages/AuthPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { SubscriptionDetailPage } from '@/pages/SubscriptionDetailPage'
 import { SubscriptionsPage } from '@/pages/SubscriptionsPage'
@@ -36,34 +39,70 @@ function PageFallback() {
   )
 }
 
+function AuthInitializingScreen() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md space-y-4">
+        <Skeleton className="mx-auto h-12 w-12 rounded-xl" />
+        <Skeleton className="h-72 rounded-xl" />
+      </div>
+    </div>
+  )
+}
+
 function ThemeAwareToaster() {
   const { settings } = useSubTrack()
   return <Toaster richColors position="bottom-right" theme={settings.theme} />
 }
 
+function AppRoutes() {
+  const { status, isPasswordRecovery } = useAuth()
+  const { pathname } = useLocation()
+
+  if (status === 'initializing') {
+    return <AuthInitializingScreen />
+  }
+
+  if (isPasswordRecovery || (status === 'unauthenticated' && pathname === '/reset-password')) {
+    return <AuthPage initialView="reset-password" />
+  }
+
+  if (status === 'unauthenticated') {
+    return <AuthPage />
+  }
+
+  return (
+    <React.Suspense fallback={<PageFallback />}>
+      <Routes>
+        <Route element={<AppShell />}>
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/subscriptions" element={<SubscriptionsPage />} />
+          <Route path="/subscriptions/:id" element={<SubscriptionDetailPage />} />
+          <Route path="/installments" element={<InstallmentsPage />} />
+          <Route path="/installments/:id" element={<InstallmentDetailPage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
+    </React.Suspense>
+  )
+}
+
 export function App() {
   return (
-    <SubTrackProvider>
-      <BrowserRouter>
-        <React.Suspense fallback={<PageFallback />}>
-          <Routes>
-            <Route element={<AppShell />}>
-              <Route path="/" element={<DashboardPage />} />
-              <Route path="/subscriptions" element={<SubscriptionsPage />} />
-              <Route path="/subscriptions/:id" element={<SubscriptionDetailPage />} />
-              <Route path="/installments" element={<InstallmentsPage />} />
-              <Route path="/installments/:id" element={<InstallmentDetailPage />} />
-              <Route path="/calendar" element={<CalendarPage />} />
-              <Route path="/analytics" element={<AnalyticsPage />} />
-              <Route path="/notifications" element={<NotificationsPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Route>
-          </Routes>
-        </React.Suspense>
-      </BrowserRouter>
-      <ThemeAwareToaster />
-    </SubTrackProvider>
+    <I18nProvider>
+      <AuthProvider>
+        <SubTrackProvider>
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+          <ThemeAwareToaster />
+        </SubTrackProvider>
+      </AuthProvider>
+    </I18nProvider>
   )
 }
 

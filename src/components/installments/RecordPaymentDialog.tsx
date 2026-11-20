@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input, Textarea } from '@/components/ui/input'
+import { useI18n } from '@/hooks/useI18n'
 import { useSubTrack } from '@/hooks/useSubTrack'
 import { todayIsoDate } from '@/lib/billing-engine'
 import { formatCurrency } from '@/lib/currency'
@@ -31,6 +32,7 @@ export function RecordPaymentDialog({
   item,
   outstandingBalance,
 }: RecordPaymentDialogProps) {
+  const { t } = useI18n()
   const { payInstallment, settleInstallment } = useSubTrack()
   const [amount, setAmount] = React.useState('')
   const [paidAt, setPaidAt] = React.useState(todayIsoDate())
@@ -63,11 +65,11 @@ export function RecordPaymentDialog({
     setError(null)
     const parsedAmount = Number(amount)
     if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      setError('Payment amount must be greater than 0.')
+      setError(t('val.payAmountGtZero'))
       return
     }
     if (mode === 'payment' && parsedAmount > remainingForItem) {
-      setError('Amount exceeds remaining balance for this installment.')
+      setError(t('val.payExceedsRemaining'))
       return
     }
 
@@ -95,7 +97,7 @@ export function RecordPaymentDialog({
       }
       onOpenChange(false)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to record payment')
+      setError(err instanceof Error ? err.message : t('val.recordPayFailed'))
     } finally {
       setSubmitting(false)
     }
@@ -107,13 +109,17 @@ export function RecordPaymentDialog({
         <DialogHeader>
           <DialogTitle>
             {mode === 'settlement'
-              ? `Early Settlement — ${plan.description}`
-              : `Record Payment — Installment #${item?.installmentNumber ?? ''}`}
+              ? t('inst.settleModalTitle', { name: plan.description })
+              : t('inst.payModalTitle', { num: item?.installmentNumber ?? '' })}
           </DialogTitle>
           <DialogDescription>
             {mode === 'settlement'
-              ? `Settle all remaining installments. Current outstanding: ${formatCurrency(outstandingBalance, plan.currency)}.`
-              : `Enter full or partial amount. Remaining due: ${formatCurrency(remainingForItem, plan.currency)}.`}
+              ? t('inst.settleModalDesc', {
+                  amount: formatCurrency(outstandingBalance, plan.currency),
+                })
+              : t('inst.payModalDesc', {
+                  amount: formatCurrency(remainingForItem, plan.currency),
+                })}
           </DialogDescription>
         </DialogHeader>
 
@@ -129,7 +135,8 @@ export function RecordPaymentDialog({
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground" htmlFor="pay-amount">
-              {mode === 'settlement' ? 'Actual Settlement Amount' : 'Payment Amount'} ({plan.currency})
+              {mode === 'settlement' ? t('inst.settlementAmount') : t('inst.paymentAmount')} (
+              {plan.currency})
             </label>
             <Input
               id="pay-amount"
@@ -146,7 +153,7 @@ export function RecordPaymentDialog({
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground" htmlFor="pay-date">
-              Payment Date
+              {t('inst.paymentDate')}
             </label>
             <Input
               id="pay-date"
@@ -159,11 +166,11 @@ export function RecordPaymentDialog({
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground" htmlFor="pay-notes">
-              Notes (optional)
+              {t('subs.notesOpt')}
             </label>
             <Textarea
               id="pay-notes"
-              placeholder="Transfer reference, early payoff discount..."
+              placeholder={t('inst.payNotesPlaceholder')}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
@@ -176,14 +183,14 @@ export function RecordPaymentDialog({
               onClick={() => onOpenChange(false)}
               disabled={submitting}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={submitting}>
               {submitting
-                ? 'Saving...'
+                ? t('common.saving')
                 : mode === 'settlement'
-                  ? 'Confirm Early Settlement'
-                  : 'Record Payment'}
+                  ? t('inst.confirmSettle')
+                  : t('subs.recordPayment')}
             </Button>
           </div>
         </form>

@@ -1,10 +1,20 @@
 import * as React from 'react'
-import { Download, RotateCcw } from 'lucide-react'
+import { Download, LogOut, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
+import { useAuth } from '@/hooks/useAuth'
+import { useI18n } from '@/hooks/useI18n'
 import { useSubTrack } from '@/hooks/useSubTrack'
+import { LOCALE_OPTIONS, type Locale } from '@/i18n/translations'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import {
   CURRENCY_OPTIONS,
@@ -14,6 +24,9 @@ import {
 } from '@/types/subscription'
 
 export function SettingsPage() {
+  const { status: authStatus, user, isSupabaseConfigured: authConfigured, signOut, exitLocalMode } =
+    useAuth()
+  const { locale, setLocale, t } = useI18n()
   const {
     mode,
     settings,
@@ -25,6 +38,8 @@ export function SettingsPage() {
   const [draft, setDraft] = React.useState<UserSettings>(settings)
   const [saving, setSaving] = React.useState(false)
   const [resetting, setResetting] = React.useState(false)
+  const [logoutOpen, setLogoutOpen] = React.useState(false)
+  const [signingOut, setSigningOut] = React.useState(false)
 
   React.useEffect(() => {
     setDraft(settings)
@@ -68,18 +83,41 @@ export function SettingsPage() {
 
   return (
     <div className="max-w-2xl space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('set.languageTitle')}</CardTitle>
+          <CardDescription>{t('set.languageDesc')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground" htmlFor="set-language">
+              {t('set.languageLabel')}
+            </label>
+            <Select
+              id="set-language"
+              value={locale}
+              onChange={(e) => setLocale(e.target.value as Locale)}
+            >
+              {LOCALE_OPTIONS.map((opt) => (
+                <option key={opt.code} value={opt.code}>
+                  {opt.nativeName}
+                </option>
+              ))}
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
       <form onSubmit={handleSave} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Currency & Calculation Preferences</CardTitle>
-            <CardDescription>
-              Set your default display currency and how paused subscriptions are treated.
-            </CardDescription>
+            <CardTitle>{t('set.currencyTitle')}</CardTitle>
+            <CardDescription>{t('set.currencyDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground" htmlFor="set-currency">
-                Default Currency
+                {t('set.defaultCurrency')}
               </label>
               <Select
                 id="set-currency"
@@ -101,9 +139,9 @@ export function SettingsPage() {
 
             <label className="flex items-center justify-between rounded-lg border border-border p-3 cursor-pointer">
               <div>
-                <div className="text-sm font-medium">Include Paused in Estimates</div>
+                <div className="text-sm font-medium">{t('set.includePaused')}</div>
                 <div className="text-xs text-muted-foreground">
-                  Count paused subscriptions in monthly/annual totals and upcoming calendar
+                  {t('set.includePausedDesc')}
                 </div>
               </div>
               <input
@@ -123,13 +161,13 @@ export function SettingsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Appearance</CardTitle>
-            <CardDescription>Dark mode is enabled by default.</CardDescription>
+            <CardTitle>{t('set.appearanceTitle')}</CardTitle>
+            <CardDescription>{t('set.appearanceDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground" htmlFor="set-theme">
-                Theme
+                {t('set.themeLabel')}
               </label>
               <Select
                 id="set-theme"
@@ -138,9 +176,9 @@ export function SettingsPage() {
                   setDraft((d) => ({ ...d, theme: e.target.value as ThemePreference }))
                 }
               >
-                <option value="dark">Dark (Default)</option>
-                <option value="light">Light</option>
-                <option value="system">System</option>
+                <option value="dark">{t('set.themeDark')}</option>
+                <option value="light">{t('set.themeLight')}</option>
+                <option value="system">{t('set.themeSystem')}</option>
               </Select>
             </div>
           </CardContent>
@@ -148,18 +186,23 @@ export function SettingsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Account & Storage</CardTitle>
+            <CardTitle>{t('set.accountTitle')}</CardTitle>
             <CardDescription>
-              Active backend:{' '}
+              {t('set.activeBackend')}{' '}
               <span className="font-medium text-foreground">
-                {mode === 'supabase' ? 'Supabase PostgreSQL' : 'Local Development Storage'}
+                {mode === 'supabase' ? t('storage.cloudDesc') : t('storage.localDesc')}
               </span>
+              {authStatus === 'authenticated' && user?.email && (
+                <span className="block mt-1 text-xs text-muted-foreground">
+                  {t('set.signedInAs')} <strong className="text-foreground">{user.email}</strong>
+                </span>
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground" htmlFor="set-name">
-                Display Name
+                {t('set.displayName')}
               </label>
               <Input
                 id="set-name"
@@ -169,18 +212,14 @@ export function SettingsPage() {
             </div>
 
             {!isSupabaseConfigured && (
-              <p className="text-xs text-muted-foreground">
-                Supabase environment variables (<code>VITE_SUPABASE_URL</code>,{' '}
-                <code>VITE_SUPABASE_ANON_KEY</code>) are not configured. Data is persisted
-                locally in your browser.
-              </p>
+              <p className="text-xs text-muted-foreground">{t('set.envMissingNotice')}</p>
             )}
 
             <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
               <div className="flex items-center gap-2">
                 <Button type="button" variant="outline" size="sm" onClick={handleExportJson}>
                   <Download className="h-4 w-4" />
-                  Export JSON
+                  {t('set.exportJson')}
                 </Button>
                 {mode === 'local' && (
                   <Button
@@ -200,7 +239,28 @@ export function SettingsPage() {
                     }}
                   >
                     <RotateCcw className="h-4 w-4" />
-                    {resetting ? 'Restoring...' : 'Restore Sample Data'}
+                    {resetting ? t('set.restoring') : t('set.restoreSample')}
+                  </Button>
+                )}
+                {authStatus === 'authenticated' && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setLogoutOpen(true)}
+                  >
+                    <LogOut className="h-4 w-4" aria-hidden="true" />
+                    {t('auth.signOut')}
+                  </Button>
+                )}
+                {authStatus === 'local' && authConfigured && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={exitLocalMode}
+                  >
+                    {t('auth.signInToCloud')}
                   </Button>
                 )}
               </div>
@@ -208,17 +268,52 @@ export function SettingsPage() {
               <div className="flex items-center gap-3">
                 {isDirty && (
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-400">
-                    Unsaved changes
+                    {t('common.unsavedChanges')}
                   </span>
                 )}
                 <Button type="submit" disabled={saving || !isDirty}>
-                  {saving ? 'Saving...' : 'Save Settings'}
+                  {saving ? t('common.saving') : t('set.saveSettings')}
                 </Button>
               </div>
             </div>
           </CardContent>
         </Card>
       </form>
+
+      <Dialog open={logoutOpen} onOpenChange={setLogoutOpen}>
+        <DialogContent onClose={() => setLogoutOpen(false)} className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t('auth.signOutTitle')}</DialogTitle>
+            <DialogDescription>{t('auth.signOutDesc')}</DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setLogoutOpen(false)}
+              disabled={signingOut}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={signingOut}
+              onClick={async () => {
+                setSigningOut(true)
+                try {
+                  await signOut()
+                  setLogoutOpen(false)
+                } finally {
+                  setSigningOut(false)
+                }
+              }}
+            >
+              {signingOut ? t('auth.signingOut') : t('auth.signOut')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

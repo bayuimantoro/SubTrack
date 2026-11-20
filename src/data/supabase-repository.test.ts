@@ -242,3 +242,223 @@ describe('SupabaseSubTrackRepository.cancelInstallmentPlan (atomic RPC)', () => 
     )
   })
 })
+
+describe('SupabaseSubTrackRepository.updateSubscription (nextBillingDate persistence)', () => {
+  const SUB_ROW = {
+    id: 'sub-uuid-1',
+    user_id: 'user-1',
+    service_name: 'Gemini',
+    category: 'AI & Tools',
+    price: 77000,
+    currency: 'IDR',
+    billing_interval: 'monthly',
+    custom_interval_days: null,
+    start_date: '2026-11-18',
+    billing_day: 18,
+    next_billing_date: '2026-11-18',
+    payment_method: 'GoPay',
+    website_url: null,
+    notes: null,
+    status: 'active',
+    created_at: '2026-11-18T00:00:00+00:00',
+    updated_at: '2026-11-18T00:00:00+00:00',
+  }
+
+  it('persists explicit nextBillingDate and preserves it on non-schedule updates', async () => {
+    const updatePayloads: Record<string, unknown>[] = []
+
+    // 1st call: updateSubscription({ nextBillingDate: '2026-12-18' })
+    fromMock.mockImplementationOnce(() => ({
+      select: () => ({
+        eq: () => ({
+          single: () => Promise.resolve({ data: SUB_ROW, error: null }),
+        }),
+      }),
+    }))
+    fromMock.mockImplementationOnce(() => ({
+      update: (payload: Record<string, unknown>) => {
+        updatePayloads.push(payload)
+        return {
+          eq: () => ({
+            select: () => ({
+              single: () =>
+                Promise.resolve({
+                  data: { ...SUB_ROW, next_billing_date: payload.next_billing_date },
+                  error: null,
+                }),
+            }),
+          }),
+        }
+      },
+    }))
+
+    const repo = new SupabaseSubTrackRepository()
+    const advanced = await repo.updateSubscription('sub-uuid-1', {
+      nextBillingDate: '2026-12-18',
+    })
+    expect(advanced.nextBillingDate).toBe('2026-12-18')
+    expect(updatePayloads[0].next_billing_date).toBe('2026-12-18')
+
+    // 2nd call: edit notes only -> must preserve next_billing_date = '2026-12-18'
+    const advancedRow = { ...SUB_ROW, next_billing_date: '2026-12-18' }
+    fromMock.mockImplementationOnce(() => ({
+      select: () => ({
+        eq: () => ({
+          single: () => Promise.resolve({ data: advancedRow, error: null }),
+        }),
+      }),
+    }))
+    fromMock.mockImplementationOnce(() => ({
+      update: (payload: Record<string, unknown>) => {
+        updatePayloads.push(payload)
+        return {
+          eq: () => ({
+            select: () => ({
+              single: () =>
+                Promise.resolve({
+                  data: {
+                    ...advancedRow,
+                    notes: payload.notes,
+                    next_billing_date: payload.next_billing_date,
+                  },
+                  error: null,
+                }),
+            }),
+          }),
+        }
+      },
+    }))
+
+    const editedNotes = await repo.updateSubscription('sub-uuid-1', {
+      notes: 'Paid November cycle',
+    })
+    expect(editedNotes.nextBillingDate).toBe('2026-12-18')
+    expect(updatePayloads[1].next_billing_date).toBe('2026-12-18')
+  })
+})
+
+describe('SupabaseSubTrackRepository.addBillingHistory (duplicate prevention)', () => {
+  const SUB_ROW = {
+    id: 'sub-uuid-1',
+    user_id: 'user-1',
+    service_name: 'Gemini',
+    category: 'AI & Tools',
+    price: 77000,
+    currency: 'IDR',
+    billing_interval: 'monthly',
+    custom_interval_days: null,
+    start_date: '2026-11-18',
+    billing_day: 18,
+    next_billing_date: '2026-11-18',
+    payment_method: 'GoPay',
+    website_url: null,
+    notes: null,
+    status: 'active',
+    created_at: '2026-11-18T00:00:00+00:00',
+    updated_at: '2026-11-18T00:00:00+00:00',
+  }
+
+  it('rejects duplicate cycle payments (same or different paidAt) and blocks concurrent submissions', async () => {
+    getUserMock.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null })
+    const insertedRows: Record<string, unknown>[] = []
+
+    const mockSupabaseTables = (existingPaidRows: Record<string, unknown>[]) => {
+      fromMock.mockImplementation((table: string) => {
+        if (table === 'subscriptions') {
+          return {
+            select: () => ({
+              eq: () => ({
+                single: () => Promise.resolve({ data: SUB_ROW, error: null }),
+              }),
+            }),
+          }
+        }
+        if (table === 'billing_history') {
+          return {
+            select: () => ({
+              eq: () => ({
+                eq: () => Promise.resolve({ data: existingPaidRows, error: null }),
+              }),
+            }),
+            insert: (payload: Record<string, unknown>) => {
+              insertedRows.push(payload)
+              return {
+                select: () => ({
+                  single: () =>
+                    Promise.resolve({
+                      data: {
+                        id: `bh-${insertedRows.length}`,
+                        ...payload,
+                        created_at: '2026-11-18T00:00:00+00:00',
+                      },
+                      error: null,
+                    }),
+                }),
+              }
+            },
+          }
+        }
+        throw new Error(`Unexpected table: ${table}`)
+      })
+    }
+
+    const repo = new SupabaseSubTrackRepository()
+
+    // 1. Concurrent rapid calls for Nov 18: only 1 insert runs
+    mockSupabaseTables([])
+    const concurrent = await Promise.allSettled([
+      repo.addBillingHistory({
+        subscriptionId: 'sub-uuid-1',
+        amount: 77000,
+        currency: 'IDR',
+        billedAt: '2026-11-18',
+        status: 'paid',
+      }),
+      repo.addBillingHistory({
+        subscriptionId: 'sub-uuid-1',
+        amount: 77000,
+        currency: 'IDR',
+        billedAt: '2026-11-18',
+        status: 'paid',
+      }),
+    ])
+    expect(concurrent.filter((r) => r.status === 'fulfilled')).toHaveLength(1)
+    expect(concurrent.filter((r) => r.status === 'rejected')).toHaveLength(1)
+    expect(insertedRows).toHaveLength(1)
+
+    // 2. Subsequent attempt with different paidAt (Nov 25) in same cycle is rejected
+    mockSupabaseTables([
+      {
+        id: 'bh-1',
+        subscription_id: 'sub-uuid-1',
+        user_id: 'user-1',
+        amount: 77000,
+        currency: 'IDR',
+        billed_at: '2026-11-18',
+        status: 'paid',
+        created_at: '2026-11-18T00:00:00+00:00',
+      },
+    ])
+    await expect(
+      repo.addBillingHistory({
+        subscriptionId: 'sub-uuid-1',
+        amount: 77000,
+        currency: 'IDR',
+        billedAt: '2026-11-25',
+        status: 'paid',
+      }),
+    ).rejects.toThrow(/already been paid/i)
+    expect(insertedRows).toHaveLength(1)
+
+    // 3. Next cycle (Dec 18) is allowed
+    const decEntry = await repo.addBillingHistory({
+      subscriptionId: 'sub-uuid-1',
+      amount: 77000,
+      currency: 'IDR',
+      billedAt: '2026-12-18',
+      status: 'paid',
+    })
+    expect(decEntry.billedAt).toBe('2026-12-18')
+    expect(insertedRows).toHaveLength(2)
+  })
+})

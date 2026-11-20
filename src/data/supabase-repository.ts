@@ -1,4 +1,9 @@
-import { calculateNextBillingDate } from '@/lib/billing-engine'
+import {
+  calculateNextBillingDate,
+  DuplicateBillingCycleError,
+  findDuplicatePaidCycle,
+  getBillingCycleKey,
+} from '@/lib/billing-engine'
 import { validateInstallmentPlanInput } from '@/lib/installment-engine'
 import { supabase } from '@/lib/supabase'
 import type { SubTrackRepository } from '@/data/repository'
@@ -121,6 +126,7 @@ function mapItemRow(r: Record<string, unknown>): InstallmentItem {
 
 export class SupabaseSubTrackRepository implements SubTrackRepository {
   readonly mode = 'supabase' as const
+  private inFlightPayments = new Set<string>()
 
   private async getUserId(): Promise<string> {
     if (!supabase) throw new Error('Supabase client is not configured')
@@ -203,9 +209,16 @@ export class SupabaseSubTrackRepository implements SubTrackRepository {
     const billingDay =
       patch.billingDay ??
       (patch.startDate ? Number(startDate.split('-')[2]) : current.billingDay)
+    const scheduleChanged =
+      patch.startDate !== undefined ||
+      patch.billingInterval !== undefined ||
+      patch.customIntervalDays !== undefined ||
+      patch.billingDay !== undefined
     const nextBillingDate =
       patch.nextBillingDate ??
-      calculateNextBillingDate(startDate, billingInterval, customIntervalDays, billingDay)
+      (scheduleChanged
+        ? calculateNextBillingDate(startDate, billingInterval, customIntervalDays, billingDay)
+        : current.nextBillingDate)
 
     const { data, error } = await supabase
       .from('subscriptions')
@@ -258,22 +271,59 @@ export class SupabaseSubTrackRepository implements SubTrackRepository {
     entry: Omit<BillingHistoryEntry, 'id' | 'createdAt'>,
   ): Promise<BillingHistoryEntry> {
     if (!supabase) throw new Error('Supabase client is not configured')
+    const client = supabase
     const userId = await this.getUserId()
-    const { data, error } = await supabase
-      .from('billing_history')
-      .insert({
-        user_id: userId,
-        subscription_id: entry.subscriptionId,
-        amount: entry.amount,
-        currency: entry.currency,
-        billed_at: entry.billedAt,
-        status: entry.status,
-      })
-      .select()
-      .single()
 
-    if (error) throw new Error(error.message)
-    return mapHistoryRow(data as BillingHistoryRow)
+    const insertRow = async (): Promise<BillingHistoryEntry> => {
+      const { data, error } = await client
+        .from('billing_history')
+        .insert({
+          user_id: userId,
+          subscription_id: entry.subscriptionId,
+          amount: entry.amount,
+          currency: entry.currency,
+          billed_at: entry.billedAt,
+          status: entry.status,
+        })
+        .select()
+        .single()
+
+      if (error) throw new Error(error.message)
+      return mapHistoryRow(data as BillingHistoryRow)
+    }
+
+    if (entry.status !== 'paid') {
+      return insertRow()
+    }
+
+    if (this.inFlightPayments.has(entry.subscriptionId)) {
+      throw new DuplicateBillingCycleError(entry.billedAt)
+    }
+    this.inFlightPayments.add(entry.subscriptionId)
+    try {
+      const [{ data: subRow, error: subError }, { data: histRows, error: histError }] =
+        await Promise.all([
+          client.from('subscriptions').select('*').eq('id', entry.subscriptionId).single(),
+          client
+            .from('billing_history')
+            .select('*')
+            .eq('subscription_id', entry.subscriptionId)
+            .eq('status', 'paid'),
+        ])
+
+      if (subError) throw new Error(subError.message)
+      if (histError) throw new Error(histError.message)
+
+      const sub = mapSubRow(subRow as SubscriptionRow)
+      const history = ((histRows ?? []) as BillingHistoryRow[]).map(mapHistoryRow)
+      if (findDuplicatePaidCycle(sub, entry.billedAt, history)) {
+        throw new DuplicateBillingCycleError(getBillingCycleKey(sub, entry.billedAt))
+      }
+
+      return await insertRow()
+    } finally {
+      this.inFlightPayments.delete(entry.subscriptionId)
+    }
   }
 
   async getNotificationPreferences(): Promise<NotificationPreferences> {

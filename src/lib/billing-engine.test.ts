@@ -1,13 +1,20 @@
 import { describe, expect, it } from 'vitest'
 import {
   addIntervalToDate,
+  advanceNextBillingDateAfterPayment,
   calculateNextBillingDate,
   calculateSpendingSummary,
+  diffDays,
+  findDuplicatePaidCycle,
+  getBillingCycleKey,
+  getEffectiveNextBillingDate,
   getUpcomingRenewals,
+  hasPaidBillingCycle,
+  matchesReminderWindow,
   normalizeToAnnual,
   normalizeToMonthly,
 } from '@/lib/billing-engine'
-import type { BillingHistoryEntry, Subscription } from '@/types/subscription'
+import type { BillingHistoryEntry, NotificationPreferences, Subscription } from '@/types/subscription'
 
 function makeSub(overrides: Partial<Subscription> = {}): Subscription {
   return {
@@ -138,5 +145,189 @@ describe('billing-engine normalization and spending summary', () => {
 
     const upcoming = getUpcomingRenewals(subs, '2026-11-16', 30, false)
     expect(upcoming.map((s) => s.serviceName)).toEqual(['Soon', 'Later'])
+  })
+})
+
+describe('paid subscription cycle advancement and notification suppression', () => {
+  const defaultPrefs: NotificationPreferences = {
+    remind7Days: true,
+    remind3Days: true,
+    remind1Day: true,
+    remindOnDueDate: true,
+    inAppAlertsEnabled: true,
+  }
+
+  it('advances a monthly subscription nextBillingDate after payment (Gemini Rp77,000 case)', () => {
+    const gemini = makeSub({
+      id: 'gemini-1',
+      serviceName: 'Gemini',
+      price: 77000,
+      billingInterval: 'monthly',
+      startDate: '2026-10-18',
+      billingDay: 18,
+      nextBillingDate: '2026-11-18',
+    })
+
+    const nextDate = advanceNextBillingDateAfterPayment(gemini, '2026-11-18')
+    expect(nextDate).toBe('2026-12-18')
+  })
+
+  it('does not generate a due-today or overdue notification for an already-paid cycle', () => {
+    const gemini = makeSub({
+      id: 'gemini-1',
+      serviceName: 'Gemini',
+      price: 77000,
+      billingInterval: 'monthly',
+      startDate: '2026-10-18',
+      billingDay: 18,
+      nextBillingDate: '2026-11-18',
+    })
+    const history: BillingHistoryEntry[] = [
+      {
+        id: 'bh-1',
+        subscriptionId: 'gemini-1',
+        amount: 77000,
+        currency: 'IDR',
+        billedAt: '2026-11-18',
+        status: 'paid',
+        createdAt: '2026-11-18T04:00:00Z',
+      },
+    ]
+
+    // On the same day (2026-11-18): no longer due today
+    const effectiveSameDay = getEffectiveNextBillingDate(gemini, '2026-11-18', history)
+    expect(effectiveSameDay).toBe('2026-12-18')
+    expect(matchesReminderWindow(diffDays('2026-11-18', effectiveSameDay), defaultPrefs)).toBe(false)
+
+    // Next day (2026-11-19): does not show as overdue or due
+    const effectiveNextDay = getEffectiveNextBillingDate(gemini, '2026-11-19', history)
+    expect(effectiveNextDay).toBe('2026-12-18')
+    expect(diffDays('2026-11-19', effectiveNextDay)).toBe(29)
+    expect(matchesReminderWindow(diffDays('2026-11-19', effectiveNextDay), defaultPrefs)).toBe(false)
+
+    // Total spending counts the Rp77,000 payment exactly once
+    const summary = calculateSpendingSummary([gemini], history, 'IDR', false)
+    expect(summary.actualTotalSpent).toBe(77000)
+  })
+
+  it('still generates notifications for the next unpaid cycle', () => {
+    const gemini = makeSub({
+      id: 'gemini-1',
+      serviceName: 'Gemini',
+      price: 77000,
+      billingInterval: 'monthly',
+      startDate: '2026-10-18',
+      billingDay: 18,
+      nextBillingDate: '2026-12-18',
+    })
+    const history: BillingHistoryEntry[] = [
+      {
+        id: 'bh-1',
+        subscriptionId: 'gemini-1',
+        amount: 77000,
+        currency: 'IDR',
+        billedAt: '2026-11-18',
+        status: 'paid',
+        createdAt: '2026-11-18T04:00:00Z',
+      },
+    ]
+
+    // On 2026-12-18, December cycle is unpaid and due today
+    const effectiveDec = getEffectiveNextBillingDate(gemini, '2026-12-18', history)
+    expect(effectiveDec).toBe('2026-12-18')
+    expect(matchesReminderWindow(diffDays('2026-12-18', effectiveDec), defaultPrefs)).toBe(true)
+  })
+
+  it('advances annual, month-end, and leap-year subscriptions accurately on payment', () => {
+    const annual = makeSub({
+      billingInterval: 'annually',
+      startDate: '2025-11-18',
+      billingDay: 18,
+      nextBillingDate: '2026-11-18',
+    })
+    expect(advanceNextBillingDateAfterPayment(annual, '2026-11-18')).toBe('2027-11-18')
+
+    const monthEnd = makeSub({
+      billingInterval: 'monthly',
+      startDate: '2026-01-31',
+      billingDay: 31,
+      nextBillingDate: '2026-02-28',
+    })
+    expect(advanceNextBillingDateAfterPayment(monthEnd, '2026-02-28')).toBe('2026-03-31')
+
+    const leapAnnual = makeSub({
+      billingInterval: 'annually',
+      startDate: '2024-02-29',
+      billingDay: 29,
+      nextBillingDate: '2024-02-29',
+    })
+    expect(advanceNextBillingDateAfterPayment(leapAnnual, '2024-02-29')).toBe('2025-02-28')
+  })
+
+  it('handles late, early, historical, and duplicate payments while preserving original billing schedule', () => {
+    // Late payment: Nov 18 cycle paid on Nov 25 -> Dec 18 (preserves billingDay 18, does not skip to Jan)
+    const lateSub = makeSub({
+      billingInterval: 'monthly',
+      startDate: '2026-10-18',
+      billingDay: 18,
+      nextBillingDate: '2026-11-18',
+    })
+    expect(advanceNextBillingDateAfterPayment(lateSub, '2026-11-25')).toBe('2026-12-18')
+
+    // Early payment: Nov 18 cycle paid on Nov 16 -> Dec 18
+    expect(advanceNextBillingDateAfterPayment(lateSub, '2026-11-16')).toBe('2026-12-18')
+
+    // Duplicate click on same day after already advancing to Dec 18 -> stays Dec 18
+    const alreadyAdvanced = makeSub({
+      billingInterval: 'monthly',
+      startDate: '2026-10-18',
+      billingDay: 18,
+      nextBillingDate: '2026-12-18',
+    })
+    expect(advanceNextBillingDateAfterPayment(alreadyAdvanced, '2026-11-18')).toBe('2026-12-18')
+
+    // Historical payment logged for Oct 18 -> stays Dec 18
+    expect(advanceNextBillingDateAfterPayment(alreadyAdvanced, '2026-10-18')).toBe('2026-12-18')
+  })
+
+  it('identifies billing cycles and detects duplicate payments across different paidAt dates', () => {
+    const gemini = makeSub({
+      id: 'gemini-1',
+      billingInterval: 'monthly',
+      startDate: '2026-11-18',
+      billingDay: 18,
+      nextBillingDate: '2026-12-18',
+    })
+    const spotify = makeSub({
+      id: 'spotify-1',
+      serviceName: 'Spotify',
+      billingInterval: 'monthly',
+      startDate: '2026-11-18',
+      billingDay: 18,
+      nextBillingDate: '2026-11-18',
+    })
+    const history: BillingHistoryEntry[] = [
+      {
+        id: 'bh-1',
+        subscriptionId: 'gemini-1',
+        amount: 77000,
+        currency: 'IDR',
+        billedAt: '2026-11-18',
+        status: 'paid',
+        createdAt: '2026-11-18T04:00:00Z',
+      },
+    ]
+
+    expect(getBillingCycleKey(gemini, '2026-11-18')).toBe('2026-11-18')
+    expect(getBillingCycleKey(gemini, '2026-11-25')).toBe('2026-11-18')
+    expect(getBillingCycleKey(gemini, '2026-12-18')).toBe('2026-12-18')
+
+    // Same cycle with same or different paidAt is detected as duplicate
+    expect(hasPaidBillingCycle(gemini, '2026-11-18', history)).toBe(true)
+    expect(findDuplicatePaidCycle(gemini, '2026-11-25', history)?.id).toBe('bh-1')
+
+    // Next billing cycle and different subscriptions remain allowed
+    expect(hasPaidBillingCycle(gemini, '2026-12-18', history)).toBe(false)
+    expect(hasPaidBillingCycle(spotify, '2026-11-18', history)).toBe(false)
   })
 })

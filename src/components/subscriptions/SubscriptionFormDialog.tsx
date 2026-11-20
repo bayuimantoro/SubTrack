@@ -11,6 +11,7 @@ import { Input, Textarea } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { todayIsoDate } from '@/lib/billing-engine'
 import { sanitizeHttpUrl } from '@/lib/utils'
+import { useI18n } from '@/hooks/useI18n'
 import { useSubTrack } from '@/hooks/useSubTrack'
 import {
   BILLING_INTERVAL_LABELS,
@@ -48,6 +49,7 @@ export function SubscriptionFormDialog({
   onOpenChange,
   initial,
 }: SubscriptionFormDialogProps) {
+  const { t } = useI18n()
   const { settings, addSubscription, editSubscription } = useSubTrack()
   const [submitting, setSubmitting] = React.useState(false)
   const [formError, setFormError] = React.useState<string | null>(null)
@@ -98,15 +100,15 @@ export function SubscriptionFormDialog({
     const trimmedName = form.serviceName.trim()
     const parsedPrice = Number(form.price)
     if (!trimmedName) {
-      setFormError('Service name is required.')
+      setFormError(t('val.serviceNameReq'))
       return
     }
     if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
-      setFormError('Price must be a valid non-negative number.')
+      setFormError(t('val.priceNonNeg'))
       return
     }
     if (!form.startDate) {
-      setFormError('Start date is required.')
+      setFormError(t('val.startDateReq'))
       return
     }
     const customDays =
@@ -115,14 +117,14 @@ export function SubscriptionFormDialog({
       form.billingInterval === 'custom' &&
       (!customDays || !Number.isInteger(customDays) || customDays < 1)
     ) {
-      setFormError('Custom interval days must be at least 1.')
+      setFormError(t('val.customDaysMin'))
       return
     }
 
     const trimmedUrl = form.websiteUrl.trim()
     const safeUrl = trimmedUrl ? sanitizeHttpUrl(trimmedUrl) : null
     if (trimmedUrl && !safeUrl) {
-      setFormError('Website URL must start with http:// or https://.')
+      setFormError(t('val.urlProtocol'))
       return
     }
 
@@ -148,7 +150,7 @@ export function SubscriptionFormDialog({
       }
       onOpenChange(false)
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Failed to save subscription')
+      setFormError(err instanceof Error ? err.message : t('val.saveSubFailed'))
     } finally {
       setSubmitting(false)
     }
@@ -158,11 +160,11 @@ export function SubscriptionFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent onClose={() => onOpenChange(false)}>
         <DialogHeader>
-          <DialogTitle>{initial ? 'Edit Subscription' : 'Add Subscription'}</DialogTitle>
+          <DialogTitle>
+            {initial ? t('subs.formEditTitle') : t('subs.formAddTitle')}
+          </DialogTitle>
           <DialogDescription>
-            {initial
-              ? 'Update recurring billing details and status.'
-              : 'Track a new recurring service and automatically calculate its next renewal.'}
+            {initial ? t('subs.formEditDesc') : t('subs.formAddDesc')}
           </DialogDescription>
         </DialogHeader>
 
@@ -181,11 +183,11 @@ export function SubscriptionFormDialog({
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-name">
-                Service Name <span aria-hidden="true">*</span>
+                {t('subs.serviceName')} <span aria-hidden="true">*</span>
               </label>
               <Input
                 id="sub-name"
-                placeholder="e.g. Netflix, Spotify, ChatGPT"
+                placeholder={t('subs.serviceNamePlaceholder')}
                 value={form.serviceName}
                 onChange={(e) => setForm((f) => ({ ...f, serviceName: e.target.value }))}
                 required
@@ -195,7 +197,7 @@ export function SubscriptionFormDialog({
 
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-category">
-                Category *
+                {t('subs.category')} *
               </label>
               <Select
                 id="sub-category"
@@ -216,7 +218,7 @@ export function SubscriptionFormDialog({
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="space-y-1.5 sm:col-span-2">
               <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-price">
-                Price <span aria-hidden="true">*</span>
+                {t('subs.price')} <span aria-hidden="true">*</span>
               </label>
               <Input
                 id="sub-price"
@@ -234,7 +236,7 @@ export function SubscriptionFormDialog({
 
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-currency">
-                Currency
+                {t('subs.currency')}
               </label>
               <Select
                 id="sub-currency"
@@ -255,7 +257,7 @@ export function SubscriptionFormDialog({
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-interval">
-                Billing Interval *
+                {t('subs.billingInterval')} *
               </label>
               <Select
                 id="sub-interval"
@@ -264,9 +266,9 @@ export function SubscriptionFormDialog({
                   setForm((f) => ({ ...f, billingInterval: e.target.value as BillingInterval }))
                 }
               >
-                {Object.entries(BILLING_INTERVAL_LABELS).map(([value, label]) => (
+                {Object.keys(BILLING_INTERVAL_LABELS).map((value) => (
                   <option key={value} value={value}>
-                    {label}
+                    {t(`interval.${value}`)}
                   </option>
                 ))}
               </Select>
@@ -275,7 +277,7 @@ export function SubscriptionFormDialog({
             {form.billingInterval === 'custom' ? (
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-custom-days">
-                  Every N Days <span aria-hidden="true">*</span>
+                  {t('subs.everyNDays')} <span aria-hidden="true">*</span>
                 </label>
                 <Input
                   id="sub-custom-days"
@@ -293,7 +295,7 @@ export function SubscriptionFormDialog({
             ) : (
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-status">
-                  Status
+                  {t('subs.status')}
                 </label>
                 <Select
                   id="sub-status"
@@ -302,9 +304,9 @@ export function SubscriptionFormDialog({
                     setForm((f) => ({ ...f, status: e.target.value as SubscriptionStatus }))
                   }
                 >
-                  <option value="active">Active</option>
-                  <option value="paused">Paused</option>
-                  <option value="cancelled">Cancelled</option>
+                  <option value="active">{t('common.status.active')}</option>
+                  <option value="paused">{t('common.status.paused')}</option>
+                  <option value="cancelled">{t('common.status.cancelled')}</option>
                 </Select>
               </div>
             )}
@@ -313,7 +315,7 @@ export function SubscriptionFormDialog({
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-start-date">
-                Start Date *
+                {t('subs.startDate')} *
               </label>
               <Input
                 id="sub-start-date"
@@ -326,11 +328,11 @@ export function SubscriptionFormDialog({
 
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-payment">
-                Payment Method (optional)
+                {t('subs.paymentMethodOpt')}
               </label>
               <Input
                 id="sub-payment"
-                placeholder="e.g. BCA Debit, GoPay"
+                placeholder={t('subs.paymentMethodPlaceholder')}
                 value={form.paymentMethod}
                 onChange={(e) => setForm((f) => ({ ...f, paymentMethod: e.target.value }))}
               />
@@ -340,7 +342,7 @@ export function SubscriptionFormDialog({
           {form.billingInterval === 'custom' && (
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-status-custom">
-                Status
+                {t('subs.status')}
               </label>
               <Select
                 id="sub-status-custom"
@@ -349,16 +351,16 @@ export function SubscriptionFormDialog({
                   setForm((f) => ({ ...f, status: e.target.value as SubscriptionStatus }))
                 }
               >
-                <option value="active">Active</option>
-                <option value="paused">Paused</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="active">{t('common.status.active')}</option>
+                <option value="paused">{t('common.status.paused')}</option>
+                <option value="cancelled">{t('common.status.cancelled')}</option>
               </Select>
             </div>
           )}
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-url">
-              Website URL (optional)
+              {t('subs.websiteOpt')}
             </label>
             <Input
               id="sub-url"
@@ -371,11 +373,11 @@ export function SubscriptionFormDialog({
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground" htmlFor="sub-notes">
-              Notes (optional)
+              {t('subs.notesOpt')}
             </label>
             <Textarea
               id="sub-notes"
-              placeholder="Plan tier, shared members, renewal reminders..."
+              placeholder={t('subs.notesPlaceholder')}
               value={form.notes}
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
             />
@@ -388,10 +390,14 @@ export function SubscriptionFormDialog({
               onClick={() => onOpenChange(false)}
               disabled={submitting}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={submitting}>
-              {submitting ? 'Saving...' : initial ? 'Save Changes' : 'Add Subscription'}
+              {submitting
+                ? t('common.saving')
+                : initial
+                  ? t('subs.saveChanges')
+                  : t('common.addSubscription')}
             </Button>
           </div>
         </form>

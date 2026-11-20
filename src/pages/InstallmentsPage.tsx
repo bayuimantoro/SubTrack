@@ -19,6 +19,7 @@ import { Select } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { InstallmentFormDialog } from '@/components/installments/InstallmentFormDialog'
 import { DeleteConfirmDialog } from '@/components/subscriptions/DeleteConfirmDialog'
+import { useI18n } from '@/hooks/useI18n'
 import { useSubTrack } from '@/hooks/useSubTrack'
 import { todayIsoDate } from '@/lib/billing-engine'
 import { formatCurrency } from '@/lib/currency'
@@ -36,6 +37,7 @@ import {
 } from '@/types/installment'
 
 export function InstallmentsPage() {
+  const { t, formatDate, formatNumber } = useI18n()
   const {
     installmentPlans,
     installmentItems,
@@ -130,7 +132,7 @@ export function InstallmentsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground">
-              Monthly Obligations
+              {t('inst.monthlyObligations')}
             </CardTitle>
             <CalendarClock className="h-4 w-4 text-emerald-400" aria-hidden="true" />
           </CardHeader>
@@ -138,14 +140,14 @@ export function InstallmentsPage() {
             <div className="text-2xl font-bold tabular-nums">
               {formatCurrency(summary.monthlyObligations, currency)}
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">Remaining due this month</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t('inst.remainingThisMonth')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground">
-              Outstanding Balance
+              {t('inst.outstandingBalance')}
             </CardTitle>
             <Wallet className="h-4 w-4 text-blue-400" aria-hidden="true" />
           </CardHeader>
@@ -154,7 +156,7 @@ export function InstallmentsPage() {
               {formatCurrency(summary.totalOutstandingBalance, currency)}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Paid: {formatCurrency(summary.totalPaidRecorded, currency)}
+              {t('inst.paidLabel', { amount: formatCurrency(summary.totalPaidRecorded, currency) })}
             </p>
           </CardContent>
         </Card>
@@ -162,14 +164,16 @@ export function InstallmentsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground">
-              Active Plans
+              {t('inst.activePlans')}
             </CardTitle>
             <Landmark className="h-4 w-4 text-emerald-400" aria-hidden="true" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tabular-nums">{summary.activePlanCount}</div>
+            <div className="text-2xl font-bold tabular-nums">
+              {formatNumber(summary.activePlanCount)}
+            </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              {summary.completedPlanCount} completed
+              {t('inst.completedCount', { count: formatNumber(summary.completedPlanCount) })}
             </p>
           </CardContent>
         </Card>
@@ -177,7 +181,7 @@ export function InstallmentsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground">
-              Overdue Installments
+              {t('inst.overdueInstallments')}
             </CardTitle>
             <AlertTriangle
               className={`h-4 w-4 ${summary.overdueCount > 0 ? 'text-red-400' : 'text-muted-foreground'}`}
@@ -185,9 +189,11 @@ export function InstallmentsPage() {
             />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tabular-nums">{summary.overdueCount}</div>
+            <div className="text-2xl font-bold tabular-nums">
+              {formatNumber(summary.overdueCount)}
+            </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              {summary.upcomingCount} due within 30 days
+              {t('inst.dueWithin30d', { count: formatNumber(summary.upcomingCount) })}
             </p>
           </CardContent>
         </Card>
@@ -202,11 +208,11 @@ export function InstallmentsPage() {
               aria-hidden="true"
             />
             <Input
-              placeholder="Search provider or description..."
+              placeholder={t('inst.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9"
-              aria-label="Search installment plans"
+              aria-label={t('inst.searchPlaceholder')}
             />
           </div>
 
@@ -214,13 +220,13 @@ export function InstallmentsPage() {
             <Select
               value={providerTypeFilter}
               onChange={(e) => setProviderTypeFilter(e.target.value as 'all' | ProviderType)}
-              aria-label="Filter by provider type"
+              aria-label={t('inst.allProviderTypes')}
               className="sm:w-44"
             >
-              <option value="all">All Provider Types</option>
-              {Object.entries(PROVIDER_TYPE_LABELS).map(([val, label]) => (
+              <option value="all">{t('inst.allProviderTypes')}</option>
+              {Object.keys(PROVIDER_TYPE_LABELS).map((val) => (
                 <option key={val} value={val}>
-                  {label}
+                  {t(`provider.${val}`)}
                 </option>
               ))}
             </Select>
@@ -230,28 +236,16 @@ export function InstallmentsPage() {
               onChange={(e) =>
                 setStatusFilter(e.target.value as 'all' | InstallmentPlanStatus)
               }
-              aria-label="Filter by status"
+              aria-label={t('subs.allStatus')}
               className="sm:w-36"
             >
-              <option value="all">All Status</option>
-              {Object.entries(INSTALLMENT_STATUS_LABELS).map(([val, label]) => (
+              <option value="all">{t('subs.allStatus')}</option>
+              {Object.keys(INSTALLMENT_STATUS_LABELS).map((val) => (
                 <option key={val} value={val}>
-                  {label}
+                  {t(`common.status.${val}`)}
                 </option>
               ))}
             </Select>
-
-            <Button
-              size="sm"
-              className="col-span-2 sm:col-span-1"
-              onClick={() => {
-                setEditingPlan(null)
-                setFormOpen(true)
-              }}
-            >
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              Add Installment Plan
-            </Button>
           </div>
         </CardContent>
       </Card>
@@ -260,10 +254,8 @@ export function InstallmentsPage() {
       {enrichedPlans.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
-            <p className="text-sm font-medium">No installment plans found</p>
-            <p className="text-xs text-muted-foreground">
-              Track PayLater, installment purchases, and personal loans separately from subscriptions.
-            </p>
+            <p className="text-sm font-medium">{t('inst.emptyTitle')}</p>
+            <p className="text-xs text-muted-foreground">{t('inst.emptyDesc')}</p>
             <Button
               size="sm"
               onClick={() => {
@@ -272,7 +264,7 @@ export function InstallmentsPage() {
               }}
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
-              Add Installment Plan
+              {t('inst.addPlan')}
             </Button>
           </CardContent>
         </Card>
@@ -297,7 +289,7 @@ export function InstallmentsPage() {
                       className="min-w-0 group rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <div className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
-                        {plan.providerName} · {PROVIDER_TYPE_LABELS[plan.providerType]}
+                        {plan.providerName} · {t(`provider.${plan.providerType}`)}
                       </div>
                       <div className="mt-0.5 truncate text-sm font-semibold group-hover:underline">
                         {plan.description}
@@ -315,14 +307,14 @@ export function InstallmentsPage() {
                               : 'secondary'
                       }
                     >
-                      {INSTALLMENT_STATUS_LABELS[metrics.effectiveStatus]}
+                      {t(`common.status.${metrics.effectiveStatus}`)}
                     </Badge>
                   </div>
 
                   {/* Progress Bar */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Repayment Progress</span>
+                      <span className="text-muted-foreground">{t('inst.repaymentProgress')}</span>
                       <span className="font-medium tabular-nums">{progressPct}%</span>
                     </div>
                     <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
@@ -335,15 +327,15 @@ export function InstallmentsPage() {
 
                   <div className="grid grid-cols-2 gap-3 border-t border-border pt-3 text-xs">
                     <div>
-                      <div className="text-muted-foreground">Outstanding</div>
+                      <div className="text-muted-foreground">{t('inst.outstanding')}</div>
                       <div className="mt-0.5 text-sm font-bold tabular-nums">
                         {formatCurrency(metrics.outstandingBalance, plan.currency)}
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-muted-foreground">Next Due</div>
+                      <div className="text-muted-foreground">{t('inst.nextDue')}</div>
                       <div className="mt-0.5 font-medium tabular-nums">
-                        {metrics.nextDueItem ? metrics.nextDueItem.dueDate : '—'}
+                        {metrics.nextDueItem ? formatDate(metrics.nextDueItem.dueDate) : '—'}
                       </div>
                     </div>
                   </div>
@@ -361,7 +353,7 @@ export function InstallmentsPage() {
                         title={`Edit ${plan.description}`}
                       >
                         <Edit2 className="h-3.5 w-3.5" aria-hidden="true" />
-                        Edit
+                        {t('common.edit')}
                       </Button>
                       <Button
                         variant="ghost"
@@ -382,10 +374,10 @@ export function InstallmentsPage() {
                       {metrics.effectiveStatus === 'completed' ? (
                         <>
                           <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                          View Ledger
+                          {t('inst.viewLedger')}
                         </>
                       ) : (
-                        'Manage Schedule'
+                        t('inst.manageSchedule')
                       )}
                     </Link>
                   </div>

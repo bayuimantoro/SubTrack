@@ -27,12 +27,115 @@ function roundTwoDecimals(amount: number): number {
   return Math.round(amount * 100) / 100
 }
 
+export interface SimpleInstallmentSummary {
+  principalAmount: number
+  monthlyInstallment: number
+  tenorMonths: number
+  totalPayment: number
+  estimatedInterestAndFees: number
+  isNegativeDifference: boolean
+  isValid: boolean
+}
+
+export function calculateSimpleInstallmentSummary(
+  principalAmount: number,
+  monthlyInstallment: number,
+  tenorMonths: number,
+): SimpleInstallmentSummary {
+  const safePrincipal = Number.isFinite(principalAmount) ? principalAmount : 0
+  const safeMonthly = Number.isFinite(monthlyInstallment) ? monthlyInstallment : 0
+  const safeTenor = Number.isInteger(tenorMonths) ? tenorMonths : Math.floor(tenorMonths || 0)
+
+  const totalPayment = roundTwoDecimals(Math.max(0, safeMonthly) * Math.max(0, safeTenor))
+  const rawDiff = roundTwoDecimals(totalPayment - Math.max(0, safePrincipal))
+  const isNegativeDifference = rawDiff < 0
+  const estimatedInterestAndFees = Math.max(0, rawDiff)
+
+  const isValid =
+    Number.isFinite(principalAmount) &&
+    principalAmount >= 0 &&
+    Number.isFinite(monthlyInstallment) &&
+    monthlyInstallment > 0 &&
+    Number.isInteger(tenorMonths) &&
+    tenorMonths >= 1 &&
+    totalPayment > 0
+
+  return {
+    principalAmount: Math.max(0, safePrincipal),
+    monthlyInstallment: Math.max(0, safeMonthly),
+    tenorMonths: Math.max(0, safeTenor),
+    totalPayment,
+    estimatedInterestAndFees,
+    isNegativeDifference,
+    isValid,
+  }
+}
+
+export function hasCustomScheduleDifferences(
+  items: InstallmentScheduleItemInput[],
+  firstDueDate: string,
+  tenorMonths: number,
+  totalRepaymentAmount: number,
+): boolean {
+  if (items.length === 0 || items.length !== tenorMonths) return true
+  const sorted = items.slice().sort((a, b) => a.installmentNumber - b.installmentNumber)
+  const expected = generateInstallmentSchedule(
+    firstDueDate,
+    tenorMonths,
+    totalRepaymentAmount,
+    sorted[0]?.scheduledAmount,
+  )
+  return sorted.some((row, idx) => {
+    const exp = expected[idx]
+    return (
+      !exp ||
+      row.dueDate !== exp.dueDate ||
+      Math.abs(row.scheduledAmount - exp.scheduledAmount) > AMOUNT_EPSILON
+    )
+  })
+}
+
+export function reconcileScheduleOnInputChange(params: {
+  currentSchedule: InstallmentScheduleItemInput[]
+  hasManualEdits: boolean
+  firstDueDate: string
+  tenorMonths: number
+  totalRepaymentAmount: number
+  fixedInstallmentAmount?: number
+  lockedInstallmentNumbers?: ReadonlySet<number>
+}): InstallmentScheduleItemInput[] {
+  if (params.hasManualEdits || !/^\d{4}-\d{2}-\d{2}$/.test(params.firstDueDate)) {
+    return params.currentSchedule
+  }
+  const generated = generateInstallmentSchedule(
+    params.firstDueDate,
+    params.tenorMonths,
+    params.totalRepaymentAmount,
+    params.fixedInstallmentAmount,
+  )
+  if (!params.lockedInstallmentNumbers || params.lockedInstallmentNumbers.size === 0) {
+    return generated
+  }
+  const existingByNum = new Map(
+    params.currentSchedule.map((row) => [row.installmentNumber, row]),
+  )
+  return generated.map((row) => {
+    if (params.lockedInstallmentNumbers!.has(row.installmentNumber)) {
+      return existingByNum.get(row.installmentNumber) ?? row
+    }
+    return row
+  })
+}
+
 export function generateInstallmentSchedule(
   firstDueDate: string,
   tenorMonths: number,
   totalRepaymentAmount: number,
   fixedInstallmentAmount?: number,
 ): InstallmentScheduleItemInput[] {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(firstDueDate)) {
+    return []
+  }
   const safeTenor = Math.max(1, Math.floor(tenorMonths))
   const anchorDay = Number(firstDueDate.split('-')[2]) || 1
   const schedule: InstallmentScheduleItemInput[] = []

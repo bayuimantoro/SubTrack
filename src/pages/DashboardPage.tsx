@@ -28,7 +28,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton'
 import { ServiceIcon } from '@/components/subscriptions/ServiceIcon'
 import { SubscriptionFormDialog } from '@/components/subscriptions/SubscriptionFormDialog'
+import { useI18n } from '@/hooks/useI18n'
 import { useSubTrack } from '@/hooks/useSubTrack'
+import { LOCALE_BCP47 } from '@/i18n/translations'
 import {
   calculateSpendingSummary,
   diffDays,
@@ -41,7 +43,6 @@ import {
   getInstallmentAlerts,
 } from '@/lib/installment-engine'
 import { convertCurrency, formatCompactCurrency, formatCurrency } from '@/lib/currency'
-import { BILLING_INTERVAL_LABELS } from '@/types/subscription'
 
 const CHART_COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4']
 
@@ -54,6 +55,7 @@ const TOOLTIP_STYLE = {
 }
 
 export function DashboardPage() {
+  const { locale, t, formatDate, formatNumber } = useI18n()
   const {
     subscriptions,
     billingHistory,
@@ -101,8 +103,15 @@ export function DashboardPage() {
   const combinedMonthlyObligations = summary.monthlyTotal + instSummary.monthlyObligations
 
   const upcoming = React.useMemo(
-    () => getUpcomingRenewals(subscriptions, today, 30, settings.includePausedInEstimates),
-    [subscriptions, today, settings.includePausedInEstimates],
+    () =>
+      getUpcomingRenewals(
+        subscriptions,
+        today,
+        30,
+        settings.includePausedInEstimates,
+        billingHistory,
+      ),
+    [subscriptions, billingHistory, today, settings.includePausedInEstimates],
   )
 
   const recentlyAdded = React.useMemo(
@@ -131,12 +140,12 @@ export function DashboardPage() {
         0,
       )
       months.push({
-        label: dt.toLocaleDateString('en-US', { month: 'short' }),
+        label: dt.toLocaleDateString(LOCALE_BCP47[locale], { month: 'short' }),
         amount: Math.round(total),
       })
     }
     return months
-  }, [subscriptions, currency, settings.includePausedInEstimates])
+  }, [subscriptions, currency, settings.includePausedInEstimates, locale])
 
   if (loading) {
     return (
@@ -160,12 +169,12 @@ export function DashboardPage() {
         <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
           <AlertCircle className="h-8 w-8 text-red-400" />
           <div>
-            <p className="font-medium">Unable to load dashboard</p>
+            <p className="font-medium">{t('dash.loadError')}</p>
             <p className="text-xs text-muted-foreground">{error}</p>
           </div>
           <Button variant="outline" size="sm" onClick={() => void refresh()}>
             <RefreshCw className="h-4 w-4" />
-            Retry
+            {t('common.retry')}
           </Button>
         </CardContent>
       </Card>
@@ -179,14 +188,17 @@ export function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground">
-              Active Subscriptions
+              {t('dash.activeSubs')}
             </CardTitle>
             <CreditCard className="h-4 w-4 text-emerald-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tabular-nums">{summary.activeCount}</div>
+            <div className="text-2xl font-bold tabular-nums">{formatNumber(summary.activeCount)}</div>
             <p className="mt-1 text-xs text-muted-foreground">
-              {summary.pausedCount} paused · {summary.cancelledCount} cancelled
+              {t('dash.pausedCancelled', {
+                paused: formatNumber(summary.pausedCount),
+                cancelled: formatNumber(summary.cancelledCount),
+              })}
             </p>
           </CardContent>
         </Card>
@@ -194,7 +206,7 @@ export function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground">
-              Monthly Recurring
+              {t('dash.monthlyRecurring')}
             </CardTitle>
             <Wallet className="h-4 w-4 text-emerald-400" />
           </CardHeader>
@@ -202,16 +214,14 @@ export function DashboardPage() {
             <div className="text-2xl font-bold tabular-nums">
               {formatCurrency(summary.monthlyTotal, currency)}
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Normalized across all intervals
-            </p>
+            <p className="mt-1 text-xs text-muted-foreground">{t('dash.normalizedDesc')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground">
-              Estimated Annual
+              {t('dash.estimatedAnnual')}
             </CardTitle>
             <TrendingUp className="h-4 w-4 text-blue-400" />
           </CardHeader>
@@ -219,16 +229,14 @@ export function DashboardPage() {
             <div className="text-2xl font-bold tabular-nums">
               {formatCurrency(summary.annualEstimate, currency)}
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Projected 12-month commitment
-            </p>
+            <p className="mt-1 text-xs text-muted-foreground">{t('dash.projected12m')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground">
-              Actual Spent (Recorded)
+              {t('dash.actualSpent')}
             </CardTitle>
             <CalendarClock className="h-4 w-4 text-amber-400" />
           </CardHeader>
@@ -236,9 +244,7 @@ export function DashboardPage() {
             <div className="text-2xl font-bold tabular-nums">
               {formatCurrency(summary.actualTotalSpent, currency)}
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              From verified billing history
-            </p>
+            <p className="mt-1 text-xs text-muted-foreground">{t('dash.verifiedHistory')}</p>
           </CardContent>
         </Card>
       </div>
@@ -247,48 +253,54 @@ export function DashboardPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-2 pb-3">
           <div>
-            <CardTitle>Combined Monthly Obligations &amp; Installments</CardTitle>
+            <CardTitle>{t('dash.combinedTitle')}</CardTitle>
             <CardDescription>
-              Subscriptions ({formatCurrency(summary.monthlyTotal, currency)}) + Installments (
-              {formatCurrency(instSummary.monthlyObligations, currency)})
+              {t('dash.combinedDesc', {
+                subs: formatCurrency(summary.monthlyTotal, currency),
+                inst: formatCurrency(instSummary.monthlyObligations, currency),
+              })}
             </CardDescription>
           </div>
           <Link
             to="/installments"
             className="inline-flex items-center gap-1 rounded text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            Installments <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+            {t('nav.installments')} <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-lg border border-border bg-background/60 p-3.5">
-            <div className="text-xs text-muted-foreground">Combined Monthly</div>
+            <div className="text-xs text-muted-foreground">{t('dash.combinedMonthly')}</div>
             <div className="mt-1 text-xl font-bold tabular-nums">
               {formatCurrency(combinedMonthlyObligations, currency)}
             </div>
           </div>
           <div className="rounded-lg border border-border bg-background/60 p-3.5">
-            <div className="text-xs text-muted-foreground">Outstanding Balance</div>
+            <div className="text-xs text-muted-foreground">{t('dash.outstandingBalance')}</div>
             <div className="mt-1 text-xl font-bold tabular-nums">
               {formatCurrency(instSummary.totalOutstandingBalance, currency)}
             </div>
           </div>
           <div className="rounded-lg border border-border bg-background/60 p-3.5">
-            <div className="text-xs text-muted-foreground">Active Installment Plans</div>
+            <div className="text-xs text-muted-foreground">{t('dash.activeInstallmentPlans')}</div>
             <div className="mt-1 text-xl font-bold tabular-nums">
-              {instSummary.activePlanCount}
+              {formatNumber(instSummary.activePlanCount)}
             </div>
           </div>
           <div className="rounded-lg border border-border bg-background/60 p-3.5">
-            <div className="text-xs text-muted-foreground">Overdue / Upcoming (30d)</div>
+            <div className="text-xs text-muted-foreground">{t('dash.overdueUpcoming')}</div>
             <div className="mt-1 flex items-center gap-2 text-xl font-bold tabular-nums">
               <span className={instAlerts.overdue.length > 0 ? 'text-red-400' : ''}>
-                {instAlerts.overdue.length}
+                {formatNumber(instAlerts.overdue.length)}
               </span>
-              <span className="text-xs font-normal text-muted-foreground">overdue</span>
+              <span className="text-xs font-normal text-muted-foreground">
+                {t('dash.overdueWord')}
+              </span>
               <span>·</span>
-              <span>{instAlerts.dueToday.length + instAlerts.upcoming.length}</span>
-              <span className="text-xs font-normal text-muted-foreground">upcoming</span>
+              <span>{formatNumber(instAlerts.dueToday.length + instAlerts.upcoming.length)}</span>
+              <span className="text-xs font-normal text-muted-foreground">
+                {t('dash.upcomingWord')}
+              </span>
             </div>
           </div>
         </CardContent>
@@ -299,24 +311,22 @@ export function DashboardPage() {
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Monthly Spending Projection</CardTitle>
-              <CardDescription>
-                Scheduled renewals over the next 6 months ({currency})
-              </CardDescription>
+              <CardTitle>{t('dash.monthlyProjection')}</CardTitle>
+              <CardDescription>{t('dash.scheduled6m', { currency })}</CardDescription>
             </div>
             <Button size="sm" variant="outline" onClick={() => setAddOpen(true)}>
               <Plus className="h-3.5 w-3.5" />
-              Quick Add
+              {t('dash.quickAdd')}
             </Button>
           </CardHeader>
           <CardContent
             className="h-64"
             role="region"
-            aria-label="Monthly spending projection chart for the next 6 months"
+            aria-label={t('dash.monthlyProjection')}
           >
             {subscriptions.length === 0 ? (
               <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
-                Add a subscription to see your monthly spending projection.
+                {t('dash.emptyProjection')}
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
@@ -333,7 +343,7 @@ export function DashboardPage() {
                     contentStyle={TOOLTIP_STYLE}
                     formatter={(value) => [
                       formatCurrency(Number(value ?? 0), currency),
-                      'Projected',
+                      t('chart.projected'),
                     ]}
                   />
                   <Bar dataKey="amount" fill="#10b981" radius={[6, 6, 0, 0]} />
@@ -345,13 +355,13 @@ export function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Spending by Category</CardTitle>
-            <CardDescription>Monthly share per category</CardDescription>
+            <CardTitle>{t('dash.spendingByCategory')}</CardTitle>
+            <CardDescription>{t('dash.monthlyShareCategory')}</CardDescription>
           </CardHeader>
           <CardContent>
             {summary.byCategory.length === 0 ? (
               <div className="flex h-52 items-center justify-center text-xs text-muted-foreground">
-                No active recurring categories yet.
+                {t('dash.emptyCategories')}
               </div>
             ) : (
               <div className="space-y-4">
@@ -407,20 +417,20 @@ export function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Upcoming Payments (Next 30 Days)</CardTitle>
-              <CardDescription>Sorted by next renewal date</CardDescription>
+              <CardTitle>{t('dash.upcomingPayments')}</CardTitle>
+              <CardDescription>{t('dash.sortedNextRenewal')}</CardDescription>
             </div>
             <Link
               to="/calendar"
               className="inline-flex items-center gap-1 rounded text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              Calendar <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+              {t('nav.calendar')} <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
           </CardHeader>
           <CardContent>
             {upcoming.length === 0 ? (
               <p className="py-6 text-center text-xs text-muted-foreground">
-                No payments due in the next 30 days.
+                {t('dash.noUpcoming30d')}
               </p>
             ) : (
               <div className="divide-y divide-border">
@@ -442,8 +452,10 @@ export function DashboardPage() {
                         <div className="min-w-0">
                           <div className="truncate text-sm font-medium">{sub.serviceName}</div>
                           <div className="text-xs text-muted-foreground">
-                            {sub.nextBillingDate} ·{' '}
-                            {days === 0 ? 'Due today' : `In ${days} day${days === 1 ? '' : 's'}`}
+                            {formatDate(sub.nextBillingDate)} ·{' '}
+                            {days === 0
+                              ? t('dash.dueToday')
+                              : t('dash.inDays', { days: formatNumber(days) })}
                           </div>
                         </div>
                       </div>
@@ -452,7 +464,7 @@ export function DashboardPage() {
                           {formatCurrency(sub.price, sub.currency)}
                         </div>
                         <div className="text-[11px] text-muted-foreground">
-                          {BILLING_INTERVAL_LABELS[sub.billingInterval]}
+                          {t(`interval.${sub.billingInterval}`)}
                         </div>
                       </div>
                     </Link>
@@ -466,24 +478,22 @@ export function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Recently Added</CardTitle>
-              <CardDescription>Latest tracked subscriptions</CardDescription>
+              <CardTitle>{t('dash.recentlyAdded')}</CardTitle>
+              <CardDescription>{t('dash.latestTracked')}</CardDescription>
             </div>
             <Link
               to="/subscriptions"
               className="inline-flex items-center gap-1 rounded text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              View all <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+              {t('dash.viewAll')} <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
           </CardHeader>
           <CardContent>
             {recentlyAdded.length === 0 ? (
               <div className="py-6 text-center">
-                <p className="text-xs text-muted-foreground mb-3">
-                  You haven&apos;t added any subscriptions yet.
-                </p>
+                <p className="text-xs text-muted-foreground mb-3">{t('dash.emptySubs')}</p>
                 <Button size="sm" onClick={() => setAddOpen(true)}>
-                  <Plus className="h-4 w-4" /> Add your first subscription
+                  <Plus className="h-4 w-4" /> {t('dash.addFirstSub')}
                 </Button>
               </div>
             ) : (
@@ -516,7 +526,7 @@ export function DashboardPage() {
                               : 'destructive'
                         }
                       >
-                        {sub.status}
+                        {t(`common.status.${sub.status}`)}
                       </Badge>
                       <span className="text-sm font-medium tabular-nums">
                         {formatCurrency(sub.price, sub.currency)}

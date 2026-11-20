@@ -2,6 +2,14 @@ import * as React from 'react'
 import { toast } from 'sonner'
 import { resolveRepository } from '@/data'
 import type { SubTrackRepository } from '@/data/repository'
+import { useAuth } from '@/hooks/useAuth'
+import { useI18n } from '@/hooks/useI18n'
+import {
+  advanceNextBillingDateAfterPayment,
+  DuplicateBillingCycleError,
+  findDuplicatePaidCycle,
+  getBillingCycleKey,
+} from '@/lib/billing-engine'
 import type {
   EarlySettlementInput,
   InstallmentItem,
@@ -56,7 +64,27 @@ function applyThemeClass(theme: UserSettings['theme']): void {
   root.classList.toggle('dark', isDark)
 }
 
+const DEFAULT_NOTIFICATION_PREFS: NotificationPreferences = {
+  remind7Days: true,
+  remind3Days: true,
+  remind1Day: true,
+  remindOnDueDate: true,
+  inAppAlertsEnabled: true,
+}
+
+const DEFAULT_USER_SETTINGS: UserSettings = {
+  displayName: 'Local Workspace',
+  defaultCurrency: 'IDR',
+  theme: 'dark',
+  includePausedInEstimates: false,
+}
+
 export function SubTrackProvider({ children }: { children: React.ReactNode }) {
+  const { status: authStatus, user } = useAuth()
+  const { t, formatDate } = useI18n()
+  const inFlightPaymentSubsRef = React.useRef(new Set<string>())
+  const activeUserId = user?.id ?? null
+
   const [repo, setRepo] = React.useState<SubTrackRepository | null>(null)
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
@@ -65,26 +93,44 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
   const [installmentPlans, setInstallmentPlans] = React.useState<InstallmentPlan[]>([])
   const [installmentItems, setInstallmentItems] = React.useState<InstallmentItem[]>([])
   const [installmentPayments, setInstallmentPayments] = React.useState<InstallmentPayment[]>([])
-  const [notificationPrefs, setNotificationPrefs] = React.useState<NotificationPreferences>({
-    remind7Days: true,
-    remind3Days: true,
-    remind1Day: true,
-    remindOnDueDate: true,
-    inAppAlertsEnabled: true,
-  })
-  const [settings, setSettings] = React.useState<UserSettings>({
-    displayName: 'Local Workspace',
-    defaultCurrency: 'IDR',
-    theme: 'dark',
-    includePausedInEstimates: false,
-  })
+  const [notificationPrefs, setNotificationPrefs] = React.useState<NotificationPreferences>(
+    DEFAULT_NOTIFICATION_PREFS,
+  )
+  const [settings, setSettings] = React.useState<UserSettings>(DEFAULT_USER_SETTINGS)
+
+  const clearInMemoryState = React.useCallback(() => {
+    setSubscriptions([])
+    setBillingHistory([])
+    setInstallmentPlans([])
+    setInstallmentItems([])
+    setInstallmentPayments([])
+    setNotificationPrefs(DEFAULT_NOTIFICATION_PREFS)
+    setSettings(DEFAULT_USER_SETTINGS)
+  }, [])
 
   const refresh = React.useCallback(async () => {
+    if (authStatus === 'initializing') {
+      setRepo(null)
+      setLoading(true)
+      setError(null)
+      return
+    }
+
+    const activeRepo = resolveRepository(authStatus)
+    if (!activeRepo) {
+      clearInMemoryState()
+      setRepo(null)
+      setError(null)
+      setLoading(false)
+      return
+    }
+
+    clearInMemoryState()
+    setRepo(activeRepo)
     setLoading(true)
     setError(null)
+
     try {
-      const activeRepo = await resolveRepository()
-      setRepo(activeRepo)
       const [subs, history, prefs, userSettings, plans, items, payments] = await Promise.all([
         activeRepo.listSubscriptions(),
         activeRepo.listBillingHistory(),
@@ -109,7 +155,7 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [authStatus, activeUserId, clearInMemoryState])
 
   React.useEffect(() => {
     void refresh()
@@ -121,7 +167,7 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
         if (!repo) throw new Error('Storage repository not ready')
         const created = await repo.createSubscription(input)
         setSubscriptions((prev) => [created, ...prev])
-        toast.success(`Added ${created.serviceName}`)
+        toast.success(t('toast.subAdded', { name: created.serviceName }))
         return created
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to add subscription'
@@ -129,7 +175,7 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
         throw err
       }
     },
-    [repo],
+    [repo, t],
   )
 
   const editSubscription = React.useCallback(
@@ -138,7 +184,7 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
         if (!repo) throw new Error('Storage repository not ready')
         const updated = await repo.updateSubscription(id, patch)
         setSubscriptions((prev) => prev.map((s) => (s.id === id ? updated : s)))
-        toast.success(`Updated ${updated.serviceName}`)
+        toast.success(t('toast.subUpdated', { name: updated.serviceName }))
         return updated
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to update subscription'
@@ -146,7 +192,7 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
         throw err
       }
     },
-    [repo],
+    [repo, t],
   )
 
   const removeSubscription = React.useCallback(
@@ -156,31 +202,67 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
         await repo.deleteSubscription(id)
         setSubscriptions((prev) => prev.filter((s) => s.id !== id))
         setBillingHistory((prev) => prev.filter((h) => h.subscriptionId !== id))
-        toast.success('Subscription deleted')
+        toast.success(t('toast.subDeleted'))
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to delete subscription'
         toast.error(message)
         throw err
       }
     },
-    [repo],
+    [repo, t],
   )
 
   const recordPayment = React.useCallback(
     async (entry: Omit<BillingHistoryEntry, 'id' | 'createdAt'>) => {
+      const currentSub = subscriptions.find((s) => s.id === entry.subscriptionId)
+      if (entry.status === 'paid') {
+        if (inFlightPaymentSubsRef.current.has(entry.subscriptionId)) {
+          const err = new DuplicateBillingCycleError(
+            currentSub ? getBillingCycleKey(currentSub, entry.billedAt) : entry.billedAt,
+          )
+          toast.error(t('toast.duplicatePayment', { cycle: formatDate(err.cycleDate) }))
+          throw err
+        }
+        if (currentSub && findDuplicatePaidCycle(currentSub, entry.billedAt, billingHistory)) {
+          const err = new DuplicateBillingCycleError(
+            getBillingCycleKey(currentSub, entry.billedAt),
+          )
+          toast.error(t('toast.duplicatePayment', { cycle: formatDate(err.cycleDate) }))
+          throw err
+        }
+        inFlightPaymentSubsRef.current.add(entry.subscriptionId)
+      }
+
       try {
         if (!repo) throw new Error('Storage repository not ready')
         const created = await repo.addBillingHistory(entry)
         setBillingHistory((prev) => [created, ...prev])
-        toast.success('Payment recorded in billing history')
+        if (entry.status === 'paid' && currentSub) {
+          const nextBillingDate = advanceNextBillingDateAfterPayment(currentSub, entry.billedAt)
+          if (nextBillingDate !== currentSub.nextBillingDate) {
+            const updatedSub = await repo.updateSubscription(currentSub.id, { nextBillingDate })
+            setSubscriptions((prev) =>
+              prev.map((s) => (s.id === currentSub.id ? updatedSub : s)),
+            )
+          }
+        }
+        toast.success(t('toast.paymentRecorded'))
         return created
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to record payment'
-        toast.error(message)
+        if (err instanceof DuplicateBillingCycleError) {
+          toast.error(t('toast.duplicatePayment', { cycle: formatDate(err.cycleDate) }))
+        } else {
+          const message = err instanceof Error ? err.message : 'Failed to record payment'
+          toast.error(message)
+        }
         throw err
+      } finally {
+        if (entry.status === 'paid') {
+          inFlightPaymentSubsRef.current.delete(entry.subscriptionId)
+        }
       }
     },
-    [repo],
+    [repo, subscriptions, billingHistory, t, formatDate],
   )
 
   const updateNotificationPrefs = React.useCallback(
@@ -189,14 +271,14 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
         if (!repo) throw new Error('Storage repository not ready')
         const saved = await repo.saveNotificationPreferences(prefs)
         setNotificationPrefs(saved)
-        toast.success('Notification preferences saved')
+        toast.success(t('toast.prefsSaved'))
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to save preferences'
         toast.error(message)
         throw err
       }
     },
-    [repo],
+    [repo, t],
   )
 
   const updateSettings = React.useCallback(
@@ -206,14 +288,14 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
         const saved = await repo.saveUserSettings(next)
         setSettings(saved)
         applyThemeClass(saved.theme)
-        toast.success('Settings saved')
+        toast.success(t('toast.settingsSaved'))
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to save settings'
         toast.error(message)
         throw err
       }
     },
-    [repo],
+    [repo, t],
   )
 
   const resetDemoData = React.useCallback(async () => {
@@ -221,13 +303,13 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
       if (!repo) throw new Error('Storage repository not ready')
       await repo.resetDemoData()
       await refresh()
-      toast.success('Sample data restored')
+      toast.success(t('toast.sampleRestored'))
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to restore sample data'
       toast.error(message)
       throw err
     }
-  }, [repo, refresh])
+  }, [repo, refresh, t])
 
   const addInstallmentPlan = React.useCallback(
     async (input: InstallmentPlanInput) => {
@@ -236,7 +318,7 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
         const { plan, items } = await repo.createInstallmentPlan(input)
         setInstallmentPlans((prev) => [plan, ...prev])
         setInstallmentItems((prev) => [...prev, ...items])
-        toast.success(`Added installment plan: ${plan.description}`)
+        toast.success(t('toast.instAdded', { name: plan.description }))
         return plan
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to create installment plan'
@@ -244,7 +326,7 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
         throw err
       }
     },
-    [repo],
+    [repo, t],
   )
 
   const editInstallmentPlan = React.useCallback(
@@ -254,7 +336,7 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
         const { plan, items } = await repo.updateInstallmentPlan(id, input)
         setInstallmentPlans((prev) => prev.map((p) => (p.id === id ? plan : p)))
         setInstallmentItems((prev) => [...prev.filter((i) => i.planId !== id), ...items])
-        toast.success(`Updated installment plan: ${plan.description}`)
+        toast.success(t('toast.instUpdated', { name: plan.description }))
         return plan
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to update installment plan'
@@ -262,7 +344,7 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
         throw err
       }
     },
-    [repo],
+    [repo, t],
   )
 
   const removeInstallmentPlan = React.useCallback(
@@ -273,14 +355,14 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
         setInstallmentPlans((prev) => prev.filter((p) => p.id !== id))
         setInstallmentItems((prev) => prev.filter((i) => i.planId !== id))
         setInstallmentPayments((prev) => prev.filter((p) => p.planId !== id))
-        toast.success('Installment plan deleted')
+        toast.success(t('toast.instDeleted'))
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to delete installment plan'
         toast.error(message)
         throw err
       }
     },
-    [repo],
+    [repo, t],
   )
 
   const cancelInstallmentPlan = React.useCallback(
@@ -290,14 +372,14 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
         const { plan, items } = await repo.cancelInstallmentPlan(id)
         setInstallmentPlans((prev) => prev.map((p) => (p.id === id ? plan : p)))
         setInstallmentItems((prev) => [...prev.filter((i) => i.planId !== id), ...items])
-        toast.success('Installment plan cancelled (payment history preserved)')
+        toast.success(t('toast.instCancelled'))
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to cancel installment plan'
         toast.error(message)
         throw err
       }
     },
-    [repo],
+    [repo, t],
   )
 
   const payInstallment = React.useCallback(
@@ -316,7 +398,7 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
             res.payment,
             ...prev.filter((p) => p.id !== res.payment.id),
           ])
-          toast.success('Installment payment recorded')
+          toast.success(t('toast.instPaid'))
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to record payment'
@@ -324,7 +406,7 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
         throw err
       }
     },
-    [repo],
+    [repo, t],
   )
 
   const settleInstallment = React.useCallback(
@@ -341,7 +423,7 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
           setInstallmentPlans(plans)
           setInstallmentItems(items)
           setInstallmentPayments(payments)
-          toast.success('Installment plan settled early')
+          toast.success(t('toast.instSettled'))
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to settle plan'
@@ -349,7 +431,7 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
         throw err
       }
     },
-    [repo],
+    [repo, t],
   )
 
   return (

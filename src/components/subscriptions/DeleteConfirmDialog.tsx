@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { useI18n } from '@/hooks/useI18n'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -21,6 +22,7 @@ export function DeleteConfirmDialog({
   serviceName,
   onConfirm,
 }: DeleteConfirmDialogProps) {
+  const { t } = useI18n()
   const [deleting, setDeleting] = React.useState(false)
 
   async function handleConfirm() {
@@ -39,11 +41,8 @@ export function DeleteConfirmDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent onClose={() => onOpenChange(false)} className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Delete {serviceName}?</DialogTitle>
-          <DialogDescription>
-            This will permanently remove {serviceName} and its billing history. This action
-            cannot be undone.
-          </DialogDescription>
+          <DialogTitle>{t('subs.deleteTitle', { name: serviceName })}</DialogTitle>
+          <DialogDescription>{t('subs.deleteDesc', { name: serviceName })}</DialogDescription>
         </DialogHeader>
         <div className="flex justify-end gap-2 pt-3">
           <Button
@@ -52,7 +51,7 @@ export function DeleteConfirmDialog({
             onClick={() => onOpenChange(false)}
             disabled={deleting}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             type="button"
@@ -60,7 +59,7 @@ export function DeleteConfirmDialog({
             onClick={handleConfirm}
             disabled={deleting}
           >
-            {deleting ? 'Deleting...' : 'Delete'}
+            {deleting ? t('common.deleting') : t('common.delete')}
           </Button>
         </div>
       </DialogContent>

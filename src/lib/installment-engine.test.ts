@@ -5,11 +5,14 @@ import {
   applyPlanCancellation,
   calculateInstallmentsSummary,
   calculatePlanProgressPct,
+  calculateSimpleInstallmentSummary,
   generateInstallmentSchedule,
   getEffectiveItemStatus,
   getEffectivePlanStatus,
   getInstallmentAlerts,
   getPlanMetrics,
+  hasCustomScheduleDifferences,
+  reconcileScheduleOnInputChange,
   validateInstallmentPlanInput,
   validateScheduleAgainstPaidItems,
 } from '@/lib/installment-engine'
@@ -333,5 +336,143 @@ describe('installment-engine regression tests (bugs #1-#4)', () => {
         metrics.effectiveStatus,
       ),
     ).toBe(100)
+  })
+})
+
+describe('installment-engine Simple Mode summary & reactive schedule preview', () => {
+  it('computes payment summary and clamps negative interest/fee differences', () => {
+    const standard = calculateSimpleInstallmentSummary(5000000, 500000, 12)
+    expect(standard.isValid).toBe(true)
+    expect(standard.totalPayment).toBe(6000000)
+    expect(standard.estimatedInterestAndFees).toBe(1000000)
+    expect(standard.isNegativeDifference).toBe(false)
+
+    // Negative difference must never display as a positive fee
+    const negative = calculateSimpleInstallmentSummary(5000000, 400000, 10)
+    expect(negative.isValid).toBe(true)
+    expect(negative.totalPayment).toBe(4000000)
+    expect(negative.estimatedInterestAndFees).toBe(0)
+    expect(negative.isNegativeDifference).toBe(true)
+
+    // Incomplete / invalid values fail validation
+    expect(calculateSimpleInstallmentSummary(NaN, 500000, 12).isValid).toBe(false)
+    expect(calculateSimpleInstallmentSummary(5000000, 0, 12).isValid).toBe(false)
+    expect(calculateSimpleInstallmentSummary(5000000, 500000, 0).isValid).toBe(false)
+  })
+
+  it('regenerates schedule reactively when not manually edited, and preserves manual edits', () => {
+    const initial = generateInstallmentSchedule('2026-01-15', 3, 1500000, 500000)
+    const manual = initial.map((row, idx) =>
+      idx === 1 ? { ...row, scheduledAmount: 650000 } : row,
+    )
+
+    // With manual edits: must preserve manual schedule unchanged
+    const preserved = reconcileScheduleOnInputChange({
+      currentSchedule: manual,
+      hasManualEdits: true,
+      firstDueDate: '2026-02-15',
+      tenorMonths: 4,
+      totalRepaymentAmount: 2000000,
+      fixedInstallmentAmount: 500000,
+    })
+    expect(preserved).toBe(manual)
+    expect(preserved[1].scheduledAmount).toBe(650000)
+
+    // Without manual edits: regenerates reactively
+    const regenerated = reconcileScheduleOnInputChange({
+      currentSchedule: manual,
+      hasManualEdits: false,
+      firstDueDate: '2026-02-15',
+      tenorMonths: 4,
+      totalRepaymentAmount: 2000000,
+      fixedInstallmentAmount: 500000,
+    })
+    expect(regenerated).toHaveLength(4)
+    expect(regenerated[0].dueDate).toBe('2026-02-15')
+    expect(regenerated[3].dueDate).toBe('2026-05-15')
+    expect(regenerated.every((r) => r.scheduledAmount === 500000)).toBe(true)
+  })
+
+  it('calculates month-end and leap-year due dates accurately', () => {
+    const leap = generateInstallmentSchedule('2024-01-31', 3, 1500000, 500000)
+    expect(leap.map((r) => r.dueDate)).toEqual(['2024-01-31', '2024-02-29', '2024-03-31'])
+
+    const nonLeap = generateInstallmentSchedule('2025-01-31', 3, 1500000, 500000)
+    expect(nonLeap.map((r) => r.dueDate)).toEqual(['2025-01-31', '2025-02-28', '2025-03-31'])
+  })
+
+  it('recalculates schedule when editing firstDueDate from Nov 18 to Dec 4, while protecting paid and manually edited rows', () => {
+    const novSchedule = generateInstallmentSchedule('2026-11-18', 6, 3000000, 500000)
+
+    // Standard saved schedule has no custom differences even if startDate was changed separately
+    expect(hasCustomScheduleDifferences(novSchedule, '2026-11-18', 6, 3000000)).toBe(false)
+
+    // Changing firstDueDate to 2026-12-04 updates all 6 rows
+    const decSchedule = reconcileScheduleOnInputChange({
+      currentSchedule: novSchedule,
+      hasManualEdits: false,
+      firstDueDate: '2026-12-04',
+      tenorMonths: 6,
+      totalRepaymentAmount: 3000000,
+      fixedInstallmentAmount: 500000,
+    })
+    expect(decSchedule.map((r) => r.dueDate)).toEqual([
+      '2026-12-04',
+      '2027-01-04',
+      '2027-02-04',
+      '2027-03-04',
+      '2027-04-04',
+      '2027-05-04',
+    ])
+
+    // Paid installment #1 is locked and preserved when recalculating future rows
+    const withPaidLocked = reconcileScheduleOnInputChange({
+      currentSchedule: novSchedule,
+      hasManualEdits: false,
+      firstDueDate: '2026-12-04',
+      tenorMonths: 6,
+      totalRepaymentAmount: 3000000,
+      fixedInstallmentAmount: 500000,
+      lockedInstallmentNumbers: new Set([1]),
+    })
+    expect(withPaidLocked[0].dueDate).toBe('2026-11-18')
+    expect(withPaidLocked[1].dueDate).toBe('2027-01-04')
+
+    // Manually edited row is detected and never silently overwritten
+    const manuallyEdited = novSchedule.map((r, i) =>
+      i === 2 ? { ...r, dueDate: '2027-01-25' } : r,
+    )
+    expect(hasCustomScheduleDifferences(manuallyEdited, '2026-11-18', 6, 3000000)).toBe(true)
+    const preserved = reconcileScheduleOnInputChange({
+      currentSchedule: manuallyEdited,
+      hasManualEdits: true,
+      firstDueDate: '2026-12-04',
+      tenorMonths: 6,
+      totalRepaymentAmount: 3000000,
+      fixedInstallmentAmount: 500000,
+    })
+    expect(preserved[2].dueDate).toBe('2027-01-25')
+
+    // Clearing date input (empty string) must not throw or wipe current schedule
+    expect(() =>
+      reconcileScheduleOnInputChange({
+        currentSchedule: novSchedule,
+        hasManualEdits: false,
+        firstDueDate: '',
+        tenorMonths: 6,
+        totalRepaymentAmount: 3000000,
+        fixedInstallmentAmount: 500000,
+      }),
+    ).not.toThrow()
+    expect(
+      reconcileScheduleOnInputChange({
+        currentSchedule: novSchedule,
+        hasManualEdits: false,
+        firstDueDate: '',
+        tenorMonths: 6,
+        totalRepaymentAmount: 3000000,
+        fixedInstallmentAmount: 500000,
+      }),
+    ).toBe(novSchedule)
   })
 })

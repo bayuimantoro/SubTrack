@@ -461,4 +461,102 @@ describe('SupabaseSubTrackRepository.addBillingHistory (duplicate prevention)', 
     expect(decEntry.billedAt).toBe('2026-12-18')
     expect(insertedRows).toHaveLength(2)
   })
+
+  it('maps Postgres 23505 unique-index error to DuplicateBillingCycleError and blocks duplicate skipped cycles', async () => {
+    getUserMock.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null })
+    const repo = new SupabaseSubTrackRepository()
+
+    // 1. Postgres 23505 on insert maps to DuplicateBillingCycleError
+    fromMock.mockImplementation((table: string) => {
+      if (table === 'subscriptions') {
+        return {
+          select: () => ({
+            eq: () => ({
+              single: () => Promise.resolve({ data: SUB_ROW, error: null }),
+            }),
+          }),
+        }
+      }
+      if (table === 'billing_history') {
+        return {
+          select: () => ({
+            eq: () => ({
+              eq: () => Promise.resolve({ data: [], error: null }),
+            }),
+          }),
+          insert: () => ({
+            select: () => ({
+              single: () =>
+                Promise.resolve({
+                  data: null,
+                  error: {
+                    code: '23505',
+                    message: 'duplicate key value violates unique constraint "uniq_billing_history_paid_cycle"',
+                  },
+                }),
+            }),
+          }),
+        }
+      }
+      throw new Error(`Unexpected table: ${table}`)
+    })
+
+    await expect(
+      repo.addBillingHistory({
+        subscriptionId: 'sub-uuid-1',
+        amount: 77000,
+        currency: 'IDR',
+        billedAt: '2026-11-18',
+        status: 'paid',
+      }),
+    ).rejects.toThrow(/2026-11-18.*already been paid/i)
+
+    // 2. Duplicate skipped cycle uses .in('status', ['paid', 'skipped']) and rejects
+    fromMock.mockImplementation((table: string) => {
+      if (table === 'subscriptions') {
+        return {
+          select: () => ({
+            eq: () => ({
+              single: () => Promise.resolve({ data: SUB_ROW, error: null }),
+            }),
+          }),
+        }
+      }
+      if (table === 'billing_history') {
+        return {
+          select: () => ({
+            eq: () => ({
+              in: () =>
+                Promise.resolve({
+                  data: [
+                    {
+                      id: 'bh-skip-1',
+                      subscription_id: 'sub-uuid-1',
+                      user_id: 'user-1',
+                      amount: 0,
+                      currency: 'IDR',
+                      billed_at: '2026-11-18',
+                      status: 'skipped',
+                      created_at: '2026-11-18T00:00:00+00:00',
+                    },
+                  ],
+                  error: null,
+                }),
+            }),
+          }),
+        }
+      }
+      throw new Error(`Unexpected table: ${table}`)
+    })
+
+    await expect(
+      repo.addBillingHistory({
+        subscriptionId: 'sub-uuid-1',
+        amount: 0,
+        currency: 'IDR',
+        billedAt: '2026-11-25',
+        status: 'skipped',
+      }),
+    ).rejects.toThrow(/already been paid/i)
+  })
 })

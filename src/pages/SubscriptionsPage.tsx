@@ -204,6 +204,18 @@ export function SubscriptionsPage() {
                 <List className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
+
+            <Button
+              size="sm"
+              className="col-span-2 sm:col-span-1"
+              onClick={() => {
+                setEditing(null)
+                setFormOpen(true)
+              }}
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              {t('common.addSubscription')}
+            </Button>
           </div>
         </CardContent>
       </Card>

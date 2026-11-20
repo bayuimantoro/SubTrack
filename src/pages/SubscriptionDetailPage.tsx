@@ -7,11 +7,21 @@ import {
   CreditCard,
   Edit2,
   ExternalLink,
+  RotateCcw,
+  SkipForward,
   Trash2,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { DeleteConfirmDialog } from '@/components/subscriptions/DeleteConfirmDialog'
 import { ServiceIcon } from '@/components/subscriptions/ServiceIcon'
@@ -21,6 +31,7 @@ import { useSubTrack } from '@/hooks/useSubTrack'
 import {
   getEffectiveNextBillingDate,
   hasPaidBillingCycle,
+  hasSkippedBillingCycle,
   normalizeToAnnual,
   normalizeToMonthly,
   todayIsoDate,
@@ -36,6 +47,10 @@ export function SubscriptionDetailPage() {
 
   const [editOpen, setEditOpen] = React.useState(false)
   const [deleteOpen, setDeleteOpen] = React.useState(false)
+  const [refundOpen, setRefundOpen] = React.useState(false)
+  const [refundAmount, setRefundAmount] = React.useState('')
+  const [refundDate, setRefundDate] = React.useState(todayIsoDate())
+  const [refundError, setRefundError] = React.useState<string | null>(null)
   const [recording, setRecording] = React.useState(false)
 
   const sub = subscriptions.find((s) => s.id === id)
@@ -94,10 +109,13 @@ export function SubscriptionDetailPage() {
 
   const today = todayIsoDate()
   const currentCyclePaid = hasPaidBillingCycle(sub, today, billingHistory)
+  const currentCycleSkipped = hasSkippedBillingCycle(sub, today, billingHistory)
   const nextUnpaidDate = getEffectiveNextBillingDate(sub, today, billingHistory)
+  const netSpent = Math.max(0, totalSpent)
+  const isCycleClosed = currentCyclePaid || currentCycleSkipped
 
   async function handleMarkPaid() {
-    if (!sub || recording || currentCyclePaid) return
+    if (!sub || recording || currentCyclePaid || sub.status === 'cancelled') return
     setRecording(true)
     try {
       await recordPayment({
@@ -114,6 +132,64 @@ export function SubscriptionDetailPage() {
     }
   }
 
+  async function handleSkipCycle() {
+    if (!sub || recording || isCycleClosed || sub.status === 'cancelled') return
+    setRecording(true)
+    try {
+      await recordPayment({
+        subscriptionId: sub.id,
+        amount: 0,
+        currency: sub.currency,
+        billedAt: todayIsoDate(),
+        status: 'skipped',
+      })
+    } catch {
+      // Error toast is already surfaced by SubTrackProvider
+    } finally {
+      setRecording(false)
+    }
+  }
+
+  function openRefundModal() {
+    if (!sub) return
+    setRefundError(null)
+    setRefundAmount(String(Math.min(sub.price, netSpent)))
+    setRefundDate(todayIsoDate())
+    setRefundOpen(true)
+  }
+
+  async function handleRefundSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!sub || recording) return
+    setRefundError(null)
+
+    const parsed = Number(refundAmount)
+    if (!Number.isFinite(parsed) || parsed <= 0 || parsed > netSpent) {
+      setRefundError(t('val.refundAmountRange'))
+      return
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(refundDate)) {
+      setRefundError(t('val.startDateReq'))
+      return
+    }
+
+    setRecording(true)
+    try {
+      await recordPayment({
+        subscriptionId: sub.id,
+        amount: parsed,
+        currency: sub.currency,
+        billedAt: refundDate,
+        status: 'refunded',
+      })
+      setRefundOpen(false)
+    } catch (err) {
+      setRefundError(err instanceof Error ? err.message : t('val.recordPayFailed'))
+    } finally {
+      setRecording(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -125,12 +201,12 @@ export function SubscriptionDetailPage() {
           {t('subs.backToList')}
         </Link>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => void handleMarkPaid()}
-            disabled={recording || currentCyclePaid}
+            disabled={recording || currentCyclePaid || sub.status === 'cancelled'}
             title={
               currentCyclePaid
                 ? t('subs.nextUnpaidCycle', { date: formatDate(nextUnpaidDate) })
@@ -143,6 +219,31 @@ export function SubscriptionDetailPage() {
               : currentCyclePaid
                 ? t('subs.cycleAlreadyPaid')
                 : t('subs.recordPayment')}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void handleSkipCycle()}
+            disabled={recording || isCycleClosed || sub.status === 'cancelled'}
+            title={
+              currentCycleSkipped
+                ? t('subs.nextUnpaidCycle', { date: formatDate(nextUnpaidDate) })
+                : undefined
+            }
+          >
+            <SkipForward className="h-4 w-4 text-amber-400" />
+            {currentCycleSkipped && !currentCyclePaid
+              ? t('subs.cycleSkipped')
+              : t('subs.skipCycle')}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={openRefundModal}
+            disabled={recording || netSpent <= 0}
+          >
+            <RotateCcw className="h-4 w-4 text-blue-400" />
+            {t('subs.recordRefund')}
           </Button>
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
             <Edit2 className="h-4 w-4" />
@@ -216,9 +317,9 @@ export function SubscriptionDetailPage() {
                   ? t('common.status.cancelled')
                   : formatDate(nextUnpaidDate)}
               </div>
-              {sub.status !== 'cancelled' && currentCyclePaid && (
+              {sub.status !== 'cancelled' && isCycleClosed && (
                 <div className="mt-0.5 text-[11px] text-emerald-700 dark:text-emerald-400">
-                  {t('subs.cycleAlreadyPaid')} ·{' '}
+                  {currentCyclePaid ? t('subs.cycleAlreadyPaid') : t('subs.cycleSkipped')} ·{' '}
                   {t('subs.nextUnpaidCycle', { date: formatDate(nextUnpaidDate) })}
                 </div>
               )}
@@ -341,6 +442,67 @@ export function SubscriptionDetailPage() {
           navigate('/subscriptions')
         }}
       />
+
+      <Dialog open={refundOpen} onOpenChange={setRefundOpen}>
+        <DialogContent onClose={() => setRefundOpen(false)} className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('subs.refundDialogTitle', { name: sub.serviceName })}</DialogTitle>
+            <DialogDescription>
+              {t('subs.refundDialogDesc', { total: formatCurrency(netSpent, sub.currency) })}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleRefundSubmit} className="space-y-4">
+            {refundError && (
+              <div
+                role="alert"
+                className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-700 dark:text-red-400"
+              >
+                {refundError}
+              </div>
+            )}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground" htmlFor="refund-amount">
+                {t('subs.refundAmount')} ({sub.currency})
+              </label>
+              <Input
+                id="refund-amount"
+                type="number"
+                inputMode="decimal"
+                min="0.01"
+                step="any"
+                value={refundAmount}
+                onChange={(e) => setRefundAmount(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground" htmlFor="refund-date">
+                {t('subs.refundDate')}
+              </label>
+              <Input
+                id="refund-date"
+                type="date"
+                value={refundDate}
+                onChange={(e) => setRefundDate(e.target.value)}
+                required
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setRefundOpen(false)}
+                disabled={recording}
+              >
+                {t('common.cancel')}
+              </Button>
+              <Button type="submit" disabled={recording}>
+                {recording ? t('common.saving') : t('subs.confirmRefund')}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

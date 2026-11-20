@@ -285,6 +285,34 @@ export function hasPaidBillingCycle(
   return Boolean(findDuplicatePaidCycle(sub, date, history))
 }
 
+export function findDuplicateSkippedCycle(
+  sub: Pick<
+    Subscription,
+    'id' | 'startDate' | 'billingInterval' | 'customIntervalDays' | 'billingDay'
+  >,
+  billedAt: string,
+  history: BillingHistoryEntry[],
+): BillingHistoryEntry | undefined {
+  const targetCycle = getBillingCycleKey(sub, billedAt)
+  return history.find(
+    (h) =>
+      h.subscriptionId === sub.id &&
+      h.status === 'skipped' &&
+      getBillingCycleKey(sub, h.billedAt) === targetCycle,
+  )
+}
+
+export function hasSkippedBillingCycle(
+  sub: Pick<
+    Subscription,
+    'id' | 'startDate' | 'billingInterval' | 'customIntervalDays' | 'billingDay'
+  >,
+  date: string,
+  history: BillingHistoryEntry[],
+): boolean {
+  return Boolean(findDuplicateSkippedCycle(sub, date, history))
+}
+
 export function advanceNextBillingDateAfterPayment(
   sub: Pick<
     Subscription,
@@ -336,14 +364,16 @@ export function getEffectiveNextBillingDate(
         )
 
   if (history && history.length > 0) {
-    const paidDates = history
-      .filter((h) => h.subscriptionId === sub.id && h.status === 'paid')
+    const coveredDates = history
+      .filter(
+        (h) => h.subscriptionId === sub.id && (h.status === 'paid' || h.status === 'skipped'),
+      )
       .map((h) => h.billedAt)
 
-    if (paidDates.length > 0) {
+    if (coveredDates.length > 0) {
       let guard = 0
-      // Advance past any billing cycle already covered by a paid record.
-      while (guard < 5000 && paidDates.some((d) => d >= cursor)) {
+      // Advance past any billing cycle already covered by a paid or skipped record.
+      while (guard < 5000 && coveredDates.some((d) => d >= cursor)) {
         cursor = addIntervalToDate(
           cursor,
           sub.billingInterval,

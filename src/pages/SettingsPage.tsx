@@ -1,5 +1,6 @@
 import * as React from 'react'
-import { Download, LogOut, RotateCcw } from 'lucide-react'
+import { Download, LogOut, RotateCcw, Upload } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -15,6 +16,12 @@ import { useAuth } from '@/hooks/useAuth'
 import { useI18n } from '@/hooks/useI18n'
 import { useSubTrack } from '@/hooks/useSubTrack'
 import { LOCALE_OPTIONS, type Locale } from '@/i18n/translations'
+import {
+  buildExportPayload,
+  MAX_IMPORT_FILE_BYTES,
+  parseImportPayload,
+  type ParsedBackupPayload,
+} from '@/lib/import-export'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import {
   CURRENCY_OPTIONS,
@@ -30,16 +37,22 @@ export function SettingsPage() {
   const {
     mode,
     settings,
+    notificationPrefs,
     subscriptions,
     billingHistory,
     updateSettings,
     resetDemoData,
+    importBackupData,
   } = useSubTrack()
   const [draft, setDraft] = React.useState<UserSettings>(settings)
   const [saving, setSaving] = React.useState(false)
   const [resetting, setResetting] = React.useState(false)
   const [logoutOpen, setLogoutOpen] = React.useState(false)
   const [signingOut, setSigningOut] = React.useState(false)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const [pendingImport, setPendingImport] = React.useState<ParsedBackupPayload | null>(null)
+  const [includeImportSettings, setIncludeImportSettings] = React.useState(false)
+  const [importing, setImporting] = React.useState(false)
 
   React.useEffect(() => {
     setDraft(settings)
@@ -64,12 +77,12 @@ export function SettingsPage() {
   }
 
   function handleExportJson() {
-    const payload = {
-      exportedAt: new Date().toISOString(),
+    const payload = buildExportPayload({
       settings,
+      notificationPrefs,
       subscriptions,
       billingHistory,
-    }
+    })
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
       type: 'application/json',
     })
@@ -79,6 +92,26 @@ export function SettingsPage() {
     a.download = `subtrack-export-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  async function handleImportFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+
+    if (file.size > MAX_IMPORT_FILE_BYTES) {
+      toast.error(t('toast.importErrorTooLarge'))
+      return
+    }
+
+    try {
+      const text = await file.text()
+      const parsed = parseImportPayload(text)
+      setIncludeImportSettings(false)
+      setPendingImport(parsed)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('toast.importErrorInvalid'))
+    }
   }
 
   return (
@@ -216,10 +249,26 @@ export function SettingsPage() {
             )}
 
             <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="application/json,.json"
+                  className="hidden"
+                  onChange={(e) => void handleImportFileChange(e)}
+                />
                 <Button type="button" variant="outline" size="sm" onClick={handleExportJson}>
                   <Download className="h-4 w-4" />
                   {t('set.exportJson')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-4 w-4" />
+                  {t('set.importJson')}
                 </Button>
                 {mode === 'local' && (
                   <Button
@@ -312,6 +361,91 @@ export function SettingsPage() {
               {signingOut ? t('auth.signingOut') : t('auth.signOut')}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(pendingImport)}
+        onOpenChange={(open) => {
+          if (!open && !importing) setPendingImport(null)
+        }}
+      >
+        <DialogContent
+          onClose={() => {
+            if (!importing) setPendingImport(null)
+          }}
+          className="max-w-md"
+        >
+          <DialogHeader>
+            <DialogTitle>{t('set.importDialogTitle')}</DialogTitle>
+            <DialogDescription>
+              {t('set.importDialogDesc', {
+                backend: mode === 'supabase' ? t('storage.cloudDesc') : t('storage.localDesc'),
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          {pendingImport && (
+            <div className="space-y-4">
+              <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs space-y-1.5">
+                <div className="font-medium text-foreground">
+                  {t('set.importPreviewSummary', {
+                    subs: pendingImport.subscriptions.length,
+                    history: pendingImport.billingHistory.length,
+                  })}
+                </div>
+                {pendingImport.orphanHistoryCount > 0 && (
+                  <div className="text-amber-700 dark:text-amber-400">
+                    {t('set.importOrphanWarning', {
+                      count: pendingImport.orphanHistoryCount,
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {(pendingImport.settings || pendingImport.notificationPrefs) && (
+                <label className="flex items-center justify-between rounded-lg border border-border p-3 cursor-pointer">
+                  <span className="text-xs font-medium">{t('set.importIncludeSettings')}</span>
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-emerald-500"
+                    checked={includeImportSettings}
+                    onChange={(e) => setIncludeImportSettings(e.target.checked)}
+                    disabled={importing}
+                  />
+                </label>
+              )}
+
+              <div className="flex justify-end gap-2 pt-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setPendingImport(null)}
+                  disabled={importing}
+                >
+                  {t('common.cancel')}
+                </Button>
+                <Button
+                  type="button"
+                  disabled={importing}
+                  onClick={async () => {
+                    setImporting(true)
+                    try {
+                      await importBackupData(pendingImport, {
+                        includeSettings: includeImportSettings,
+                      })
+                      setPendingImport(null)
+                    } catch {
+                      // Error toast already surfaced by SubTrackProvider
+                    } finally {
+                      setImporting(false)
+                    }
+                  }}
+                >
+                  {importing ? t('set.importing') : t('set.importConfirmBtn')}
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

@@ -6,10 +6,12 @@ import {
   calculateSpendingSummary,
   diffDays,
   findDuplicatePaidCycle,
+  findDuplicateSkippedCycle,
   getBillingCycleKey,
   getEffectiveNextBillingDate,
   getUpcomingRenewals,
   hasPaidBillingCycle,
+  hasSkippedBillingCycle,
   matchesReminderWindow,
   normalizeToAnnual,
   normalizeToMonthly,
@@ -329,5 +331,62 @@ describe('paid subscription cycle advancement and notification suppression', () 
     // Next billing cycle and different subscriptions remain allowed
     expect(hasPaidBillingCycle(gemini, '2026-12-18', history)).toBe(false)
     expect(hasPaidBillingCycle(spotify, '2026-11-18', history)).toBe(false)
+  })
+
+  it('handles skipped cycles (advances schedule & suppresses alert) and refunded entries (adjusts net spending only)', () => {
+    const sub = makeSub({
+      id: 'sub-skip',
+      price: 100000,
+      billingInterval: 'monthly',
+      startDate: '2026-11-18',
+      billingDay: 18,
+      nextBillingDate: '2026-11-18',
+    })
+    const skippedHistory: BillingHistoryEntry[] = [
+      {
+        id: 'bh-skip',
+        subscriptionId: 'sub-skip',
+        amount: 0,
+        currency: 'IDR',
+        billedAt: '2026-11-18',
+        status: 'skipped',
+        createdAt: '2026-11-18T05:00:00Z',
+      },
+    ]
+
+    expect(hasSkippedBillingCycle(sub, '2026-11-18', skippedHistory)).toBe(true)
+    expect(findDuplicateSkippedCycle(sub, '2026-11-25', skippedHistory)?.id).toBe('bh-skip')
+    expect(hasPaidBillingCycle(sub, '2026-11-18', skippedHistory)).toBe(false)
+
+    // Skipped cycle advances effective next billing date & suppresses due-today alert
+    const effectiveAfterSkip = getEffectiveNextBillingDate(sub, '2026-11-18', skippedHistory)
+    expect(effectiveAfterSkip).toBe('2026-12-18')
+    expect(matchesReminderWindow(diffDays('2026-11-18', effectiveAfterSkip), defaultPrefs)).toBe(
+      false,
+    )
+
+    // Refunded entry reduces actualTotalSpent without advancing nextBillingDate on its own
+    const paidAndRefunded: BillingHistoryEntry[] = [
+      {
+        id: 'bh-paid',
+        subscriptionId: 'sub-skip',
+        amount: 100000,
+        currency: 'IDR',
+        billedAt: '2026-11-18',
+        status: 'paid',
+        createdAt: '2026-11-18T04:00:00Z',
+      },
+      {
+        id: 'bh-refund',
+        subscriptionId: 'sub-skip',
+        amount: 40000,
+        currency: 'IDR',
+        billedAt: '2026-11-19',
+        status: 'refunded',
+        createdAt: '2026-11-19T04:00:00Z',
+      },
+    ]
+    const summary = calculateSpendingSummary([sub], paidAndRefunded, 'IDR', false)
+    expect(summary.actualTotalSpent).toBe(60000)
   })
 })

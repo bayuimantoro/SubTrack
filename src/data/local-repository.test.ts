@@ -466,4 +466,82 @@ describe('LocalSubTrackRepository.addBillingHistory (duplicate prevention)', () 
     const geminiHistory = await repo.listBillingHistory(gemini.id)
     expect(geminiHistory).toHaveLength(2)
   })
+
+  it('rejects duplicate skipped cycles, blocks skip after paid, and permits refunded entries', async () => {
+    seedAll()
+    const repo = new LocalSubTrackRepository()
+    const subA = await repo.createSubscription({
+      serviceName: 'Service A',
+      category: 'Other',
+      price: 50000,
+      currency: 'IDR',
+      billingInterval: 'monthly',
+      customIntervalDays: null,
+      startDate: '2026-11-18',
+      paymentMethod: null,
+      websiteUrl: null,
+      notes: null,
+      status: 'active',
+      nextBillingDate: '2026-11-18',
+    })
+    const subB = await repo.createSubscription({
+      serviceName: 'Service B',
+      category: 'Other',
+      price: 80000,
+      currency: 'IDR',
+      billingInterval: 'monthly',
+      customIntervalDays: null,
+      startDate: '2026-11-18',
+      paymentMethod: null,
+      websiteUrl: null,
+      notes: null,
+      status: 'active',
+      nextBillingDate: '2026-11-18',
+    })
+
+    // First skip succeeds; duplicate skip in same cycle fails
+    await repo.addBillingHistory({
+      subscriptionId: subA.id,
+      amount: 0,
+      currency: 'IDR',
+      billedAt: '2026-11-18',
+      status: 'skipped',
+    })
+    await expect(
+      repo.addBillingHistory({
+        subscriptionId: subA.id,
+        amount: 0,
+        currency: 'IDR',
+        billedAt: '2026-11-25',
+        status: 'skipped',
+      }),
+    ).rejects.toThrow(/already been paid/i)
+
+    // Paid on subB blocks subsequent skip in same cycle, while refunded is allowed
+    await repo.addBillingHistory({
+      subscriptionId: subB.id,
+      amount: 80000,
+      currency: 'IDR',
+      billedAt: '2026-11-18',
+      status: 'paid',
+    })
+    await expect(
+      repo.addBillingHistory({
+        subscriptionId: subB.id,
+        amount: 0,
+        currency: 'IDR',
+        billedAt: '2026-11-19',
+        status: 'skipped',
+      }),
+    ).rejects.toThrow(/already been paid/i)
+
+    const refund = await repo.addBillingHistory({
+      subscriptionId: subB.id,
+      amount: 80000,
+      currency: 'IDR',
+      billedAt: '2026-11-20',
+      status: 'refunded',
+    })
+    expect(refund.status).toBe('refunded')
+  })
 })

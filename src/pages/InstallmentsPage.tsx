@@ -22,7 +22,7 @@ import { DeleteConfirmDialog } from '@/components/subscriptions/DeleteConfirmDia
 import { useI18n } from '@/hooks/useI18n'
 import { useSubTrack } from '@/hooks/useSubTrack'
 import { todayIsoDate } from '@/lib/billing-engine'
-import { formatCurrency } from '@/lib/currency'
+import { convertCurrency, formatCurrency } from '@/lib/currency'
 import {
   calculateInstallmentsSummary,
   calculatePlanProgressPct,
@@ -35,6 +35,8 @@ import {
   type InstallmentPlanStatus,
   type ProviderType,
 } from '@/types/installment'
+
+type InstallmentSortOption = 'next_due_asc' | 'outstanding_desc' | 'outstanding_asc' | 'name_asc'
 
 export function InstallmentsPage() {
   const { t, formatDate, formatNumber } = useI18n()
@@ -50,6 +52,7 @@ export function InstallmentsPage() {
   const [search, setSearch] = React.useState('')
   const [providerTypeFilter, setProviderTypeFilter] = React.useState<'all' | ProviderType>('all')
   const [statusFilter, setStatusFilter] = React.useState<'all' | InstallmentPlanStatus>('all')
+  const [sortBy, setSortBy] = React.useState<InstallmentSortOption>('next_due_asc')
   const [formOpen, setFormOpen] = React.useState(false)
   const [editingPlan, setEditingPlan] = React.useState<InstallmentPlan | null>(null)
   const [deletingPlan, setDeletingPlan] = React.useState<InstallmentPlan | null>(null)
@@ -94,6 +97,27 @@ export function InstallmentsPage() {
         }
         return true
       })
+      .sort((a, b) => {
+        switch (sortBy) {
+          case 'next_due_asc': {
+            const da = a.metrics.nextDueItem?.dueDate ?? '9999-12-31'
+            const db = b.metrics.nextDueItem?.dueDate ?? '9999-12-31'
+            return da.localeCompare(db) || a.plan.description.localeCompare(b.plan.description)
+          }
+          case 'outstanding_desc': {
+            const oa = convertCurrency(a.metrics.outstandingBalance, a.plan.currency, currency)
+            const ob = convertCurrency(b.metrics.outstandingBalance, b.plan.currency, currency)
+            return ob - oa
+          }
+          case 'outstanding_asc': {
+            const oa = convertCurrency(a.metrics.outstandingBalance, a.plan.currency, currency)
+            const ob = convertCurrency(b.metrics.outstandingBalance, b.plan.currency, currency)
+            return oa - ob
+          }
+          case 'name_asc':
+            return a.plan.description.localeCompare(b.plan.description)
+        }
+      })
   }, [
     installmentPlans,
     installmentItems,
@@ -101,6 +125,8 @@ export function InstallmentsPage() {
     search,
     providerTypeFilter,
     statusFilter,
+    sortBy,
+    currency,
     today,
   ])
 
@@ -245,6 +271,18 @@ export function InstallmentsPage() {
                   {t(`common.status.${val}`)}
                 </option>
               ))}
+            </Select>
+
+            <Select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as InstallmentSortOption)}
+              aria-label={t('inst.sortNextDue')}
+              className="col-span-2 sm:w-44"
+            >
+              <option value="next_due_asc">{t('inst.sortNextDue')}</option>
+              <option value="outstanding_desc">{t('inst.sortOutstandingDesc')}</option>
+              <option value="outstanding_asc">{t('inst.sortOutstandingAsc')}</option>
+              <option value="name_asc">{t('inst.sortNameAsc')}</option>
             </Select>
           </div>
         </CardContent>

@@ -3,6 +3,7 @@ import {
   calculateNextBillingDate,
   DuplicateBillingCycleError,
   findDuplicatePaidCycle,
+  findDuplicateSkippedCycle,
   getBillingCycleKey,
   todayIsoDate,
 } from '@/lib/billing-engine'
@@ -469,7 +470,7 @@ export class LocalSubTrackRepository implements SubTrackRepository {
   async addBillingHistory(
     entry: Omit<BillingHistoryEntry, 'id' | 'createdAt'>,
   ): Promise<BillingHistoryEntry> {
-    if (entry.status === 'paid') {
+    if (entry.status === 'paid' || entry.status === 'skipped') {
       if (this.inFlightPayments.has(entry.subscriptionId)) {
         throw new DuplicateBillingCycleError(entry.billedAt)
       }
@@ -480,8 +481,13 @@ export class LocalSubTrackRepository implements SubTrackRepository {
           this.listBillingHistory(),
         ])
         const sub = subscriptions.find((s) => s.id === entry.subscriptionId)
-        if (sub && findDuplicatePaidCycle(sub, entry.billedAt, existing)) {
-          throw new DuplicateBillingCycleError(getBillingCycleKey(sub, entry.billedAt))
+        if (sub) {
+          const alreadyPaid = findDuplicatePaidCycle(sub, entry.billedAt, existing)
+          const alreadySkipped =
+            entry.status === 'skipped' && findDuplicateSkippedCycle(sub, entry.billedAt, existing)
+          if (alreadyPaid || alreadySkipped) {
+            throw new DuplicateBillingCycleError(getBillingCycleKey(sub, entry.billedAt))
+          }
         }
         const created: BillingHistoryEntry = {
           ...entry,

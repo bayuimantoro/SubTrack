@@ -2,6 +2,7 @@ import {
   calculateNextBillingDate,
   DuplicateBillingCycleError,
   findDuplicatePaidCycle,
+  findDuplicateSkippedCycle,
   getBillingCycleKey,
 } from '@/lib/billing-engine'
 import { validateInstallmentPlanInput } from '@/lib/installment-engine'
@@ -274,7 +275,7 @@ export class SupabaseSubTrackRepository implements SubTrackRepository {
     const client = supabase
     const userId = await this.getUserId()
 
-    const insertRow = async (): Promise<BillingHistoryEntry> => {
+    const insertRow = async (cycleKey?: string): Promise<BillingHistoryEntry> => {
       const { data, error } = await client
         .from('billing_history')
         .insert({
@@ -288,11 +289,17 @@ export class SupabaseSubTrackRepository implements SubTrackRepository {
         .select()
         .single()
 
-      if (error) throw new Error(error.message)
+      if (error) {
+        const pgCode = (error as { code?: string }).code
+        if (pgCode === '23505' || /uniq_billing_history_paid_cycle/i.test(error.message)) {
+          throw new DuplicateBillingCycleError(cycleKey ?? entry.billedAt)
+        }
+        throw new Error(error.message)
+      }
       return mapHistoryRow(data as BillingHistoryRow)
     }
 
-    if (entry.status !== 'paid') {
+    if (entry.status !== 'paid' && entry.status !== 'skipped') {
       return insertRow()
     }
 
@@ -301,14 +308,19 @@ export class SupabaseSubTrackRepository implements SubTrackRepository {
     }
     this.inFlightPayments.add(entry.subscriptionId)
     try {
+      const histQuery = client
+        .from('billing_history')
+        .select('*')
+        .eq('subscription_id', entry.subscriptionId)
+      const filteredHistQuery =
+        entry.status === 'paid'
+          ? histQuery.eq('status', 'paid')
+          : histQuery.in('status', ['paid', 'skipped'])
+
       const [{ data: subRow, error: subError }, { data: histRows, error: histError }] =
         await Promise.all([
           client.from('subscriptions').select('*').eq('id', entry.subscriptionId).single(),
-          client
-            .from('billing_history')
-            .select('*')
-            .eq('subscription_id', entry.subscriptionId)
-            .eq('status', 'paid'),
+          filteredHistQuery,
         ])
 
       if (subError) throw new Error(subError.message)
@@ -316,11 +328,15 @@ export class SupabaseSubTrackRepository implements SubTrackRepository {
 
       const sub = mapSubRow(subRow as SubscriptionRow)
       const history = ((histRows ?? []) as BillingHistoryRow[]).map(mapHistoryRow)
-      if (findDuplicatePaidCycle(sub, entry.billedAt, history)) {
-        throw new DuplicateBillingCycleError(getBillingCycleKey(sub, entry.billedAt))
+      const cycleKey = getBillingCycleKey(sub, entry.billedAt)
+      const alreadyPaid = findDuplicatePaidCycle(sub, entry.billedAt, history)
+      const alreadySkipped =
+        entry.status === 'skipped' && findDuplicateSkippedCycle(sub, entry.billedAt, history)
+      if (alreadyPaid || alreadySkipped) {
+        throw new DuplicateBillingCycleError(cycleKey)
       }
 
-      return await insertRow()
+      return await insertRow(cycleKey)
     } finally {
       this.inFlightPayments.delete(entry.subscriptionId)
     }

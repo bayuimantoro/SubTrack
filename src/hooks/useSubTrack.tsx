@@ -8,8 +8,15 @@ import {
   advanceNextBillingDateAfterPayment,
   DuplicateBillingCycleError,
   findDuplicatePaidCycle,
+  findDuplicateSkippedCycle,
   getBillingCycleKey,
 } from '@/lib/billing-engine'
+import {
+  makeHistoryDedupKey,
+  makeSubscriptionDedupKey,
+  type ImportResultSummary,
+  type ParsedBackupPayload,
+} from '@/lib/import-export'
 import type {
   EarlySettlementInput,
   InstallmentItem,
@@ -53,6 +60,10 @@ interface SubTrackContextValue {
   cancelInstallmentPlan: (id: string) => Promise<void>
   payInstallment: (input: RecordInstallmentPaymentInput) => Promise<void>
   settleInstallment: (input: EarlySettlementInput) => Promise<void>
+  importBackupData: (
+    payload: ParsedBackupPayload,
+    options: { includeSettings: boolean },
+  ) => Promise<ImportResultSummary>
 }
 
 const SubTrackContext = React.createContext<SubTrackContextValue | undefined>(undefined)
@@ -215,19 +226,26 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
   const recordPayment = React.useCallback(
     async (entry: Omit<BillingHistoryEntry, 'id' | 'createdAt'>) => {
       const currentSub = subscriptions.find((s) => s.id === entry.subscriptionId)
-      if (entry.status === 'paid') {
+      const isCycleTracked = entry.status === 'paid' || entry.status === 'skipped'
+      if (isCycleTracked) {
+        const cycleKey = currentSub ? getBillingCycleKey(currentSub, entry.billedAt) : entry.billedAt
+        const duplicateMsgKey =
+          entry.status === 'paid' ? 'toast.duplicatePayment' : 'toast.cycleAlreadyClosed'
+
         if (inFlightPaymentSubsRef.current.has(entry.subscriptionId)) {
-          const err = new DuplicateBillingCycleError(
-            currentSub ? getBillingCycleKey(currentSub, entry.billedAt) : entry.billedAt,
-          )
-          toast.error(t('toast.duplicatePayment', { cycle: formatDate(err.cycleDate) }))
+          const err = new DuplicateBillingCycleError(cycleKey)
+          toast.error(t(duplicateMsgKey, { cycle: formatDate(err.cycleDate) }))
           throw err
         }
-        if (currentSub && findDuplicatePaidCycle(currentSub, entry.billedAt, billingHistory)) {
-          const err = new DuplicateBillingCycleError(
-            getBillingCycleKey(currentSub, entry.billedAt),
-          )
-          toast.error(t('toast.duplicatePayment', { cycle: formatDate(err.cycleDate) }))
+        const alreadyPaid =
+          currentSub && findDuplicatePaidCycle(currentSub, entry.billedAt, billingHistory)
+        const alreadySkipped =
+          currentSub &&
+          entry.status === 'skipped' &&
+          findDuplicateSkippedCycle(currentSub, entry.billedAt, billingHistory)
+        if (alreadyPaid || alreadySkipped) {
+          const err = new DuplicateBillingCycleError(cycleKey)
+          toast.error(t(duplicateMsgKey, { cycle: formatDate(err.cycleDate) }))
           throw err
         }
         inFlightPaymentSubsRef.current.add(entry.subscriptionId)
@@ -237,7 +255,7 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
         if (!repo) throw new Error('Storage repository not ready')
         const created = await repo.addBillingHistory(entry)
         setBillingHistory((prev) => [created, ...prev])
-        if (entry.status === 'paid' && currentSub) {
+        if (isCycleTracked && currentSub) {
           const nextBillingDate = advanceNextBillingDateAfterPayment(currentSub, entry.billedAt)
           if (nextBillingDate !== currentSub.nextBillingDate) {
             const updatedSub = await repo.updateSubscription(currentSub.id, { nextBillingDate })
@@ -246,18 +264,26 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
             )
           }
         }
-        toast.success(t('toast.paymentRecorded'))
+        const successKey =
+          entry.status === 'skipped'
+            ? 'toast.cycleSkipped'
+            : entry.status === 'refunded'
+              ? 'toast.refundRecorded'
+              : 'toast.paymentRecorded'
+        toast.success(t(successKey))
         return created
       } catch (err) {
         if (err instanceof DuplicateBillingCycleError) {
-          toast.error(t('toast.duplicatePayment', { cycle: formatDate(err.cycleDate) }))
+          const duplicateMsgKey =
+            entry.status === 'paid' ? 'toast.duplicatePayment' : 'toast.cycleAlreadyClosed'
+          toast.error(t(duplicateMsgKey, { cycle: formatDate(err.cycleDate) }))
         } else {
           const message = err instanceof Error ? err.message : 'Failed to record payment'
           toast.error(message)
         }
         throw err
       } finally {
-        if (entry.status === 'paid') {
+        if (isCycleTracked) {
           inFlightPaymentSubsRef.current.delete(entry.subscriptionId)
         }
       }
@@ -434,6 +460,104 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
     [repo, t],
   )
 
+  const importBackupData = React.useCallback(
+    async (
+      payload: ParsedBackupPayload,
+      options: { includeSettings: boolean },
+    ): Promise<ImportResultSummary> => {
+      try {
+        if (!repo) throw new Error('Storage repository not ready')
+
+        const existingSubByKey = new Map<string, string>()
+        for (const sub of subscriptions) {
+          existingSubByKey.set(makeSubscriptionDedupKey(sub), sub.id)
+        }
+        const existingHistoryKeys = new Set(billingHistory.map(makeHistoryDedupKey))
+        const sourceIdToTargetId = new Map<string, string>()
+
+        let subscriptionsImported = 0
+        let subscriptionsSkipped = 0
+        let historyImported = 0
+        let historySkipped = payload.orphanHistoryCount
+
+        for (const subInput of payload.subscriptions) {
+          const dedupKey = makeSubscriptionDedupKey(subInput)
+          const existingId = existingSubByKey.get(dedupKey)
+          if (existingId) {
+            if (subInput.sourceId) sourceIdToTargetId.set(subInput.sourceId, existingId)
+            subscriptionsSkipped += 1
+            continue
+          }
+          const { sourceId, ...createPayload } = subInput
+          const created = await repo.createSubscription(createPayload)
+          existingSubByKey.set(dedupKey, created.id)
+          if (sourceId) sourceIdToTargetId.set(sourceId, created.id)
+          subscriptionsImported += 1
+        }
+
+        for (const entry of payload.billingHistory) {
+          const targetSubId = sourceIdToTargetId.get(entry.subscriptionId)
+          if (!targetSubId) {
+            historySkipped += 1
+            continue
+          }
+          const resolvedEntry = { ...entry, subscriptionId: targetSubId }
+          const histKey = makeHistoryDedupKey(resolvedEntry)
+          if (existingHistoryKeys.has(histKey)) {
+            historySkipped += 1
+            continue
+          }
+          try {
+            await repo.addBillingHistory(resolvedEntry)
+            existingHistoryKeys.add(histKey)
+            historyImported += 1
+          } catch (err) {
+            if (err instanceof DuplicateBillingCycleError) {
+              historySkipped += 1
+            } else {
+              throw err
+            }
+          }
+        }
+
+        let settingsImported = false
+        if (options.includeSettings) {
+          if (payload.settings) {
+            const savedSettings = await repo.saveUserSettings(payload.settings)
+            applyThemeClass(savedSettings.theme)
+            settingsImported = true
+          }
+          if (payload.notificationPrefs) {
+            await repo.saveNotificationPreferences(payload.notificationPrefs)
+            settingsImported = true
+          }
+        }
+
+        await refresh()
+        toast.success(
+          t('toast.importSuccess', {
+            subs: subscriptionsImported,
+            history: historyImported,
+            skipped: subscriptionsSkipped + historySkipped,
+          }),
+        )
+
+        return {
+          subscriptionsImported,
+          subscriptionsSkipped,
+          historyImported,
+          historySkipped,
+          settingsImported,
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : t('toast.importErrorInvalid')
+        toast.error(message)
+        throw err
+      }
+    },
+    [repo, subscriptions, billingHistory, refresh, t],
+  )
+
   return (
     <SubTrackContext.Provider
       value={{
@@ -461,6 +585,7 @@ export function SubTrackProvider({ children }: { children: React.ReactNode }) {
         cancelInstallmentPlan,
         payInstallment,
         settleInstallment,
+        importBackupData,
       }}
     >
       {children}

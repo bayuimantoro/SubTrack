@@ -17,7 +17,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 import { useI18n } from '@/hooks/useI18n'
-import { useSubTrack } from '@/hooks/useSubTrack'
 import { type Locale } from '@/i18n/translations'
 import { formatCurrency } from '@/lib/currency'
 import { cn } from '@/lib/utils'
@@ -52,11 +51,13 @@ const LOCALE_SHORT: Record<Locale, string> = {
 export function LandingPage() {
   const { locale, setLocale, t } = useI18n()
   const { enterLocalMode } = useAuth()
-  const { settings, updateSettings } = useSubTrack()
 
   const heroRef = React.useRef<HTMLElement | null>(null)
   const [selectedSubs, setSelectedSubs] = React.useState<string[]>(['stream', 'music', 'cloud'])
   const [tenorMonths, setTenorMonths] = React.useState<(typeof TENOR_OPTIONS)[number]>(12)
+  const [isDark, setIsDark] = React.useState<boolean>(() =>
+    typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : true,
+  )
 
   // Scroll-craft: single rAF-throttled CSS custom property driver for hero depth planes (zero React re-renders)
   React.useEffect(() => {
@@ -116,10 +117,12 @@ export function LandingPage() {
   const subSharePct =
     demoTotalMonthly > 0 ? Math.round((demoMonthlySubs / demoTotalMonthly) * 100) : 0
 
-  const isDark = settings.theme === 'dark'
-
   const toggleTheme = () => {
-    void updateSettings({ ...settings, theme: isDark ? 'light' : 'dark' })
+    const nextDark = !isDark
+    setIsDark(nextDark)
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.toggle('dark', nextDark)
+    }
   }
 
   return (
@@ -347,7 +350,7 @@ export function LandingPage() {
                 </div>
 
                 {/* Plane 3A: Foreground Floating Reminder Chip (Desktop overlapping depth) */}
-                <div className="hero-plane-float-a mt-3 flex items-center gap-2.5 rounded-xl border border-border bg-popover/95 px-3.5 py-2.5 text-xs shadow-elevated backdrop-blur-sm md:absolute md:-left-6 md:bottom-8 md:mt-0">
+                <div className="hero-plane-float-a mt-3 flex items-center gap-2.5 rounded-xl border border-border bg-popover/95 px-3.5 py-2.5 text-xs shadow-elevated backdrop-blur-sm md:absolute md:-bottom-7 md:-left-6 md:mt-0">
                   <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400">
                     <Bell className="h-3.5 w-3.5" aria-hidden="true" />
                   </div>
@@ -358,7 +361,7 @@ export function LandingPage() {
                 </div>
 
                 {/* Plane 3B: Foreground Floating Annual Projection Chip (Desktop overlapping depth) */}
-                <div className="hero-plane-float-b mt-2.5 flex items-center justify-between gap-3 rounded-xl border border-border bg-popover/95 px-3.5 py-2.5 text-xs shadow-elevated backdrop-blur-sm md:absolute md:-right-4 md:-top-5 md:mt-0">
+                <div className="hero-plane-float-b mt-2.5 flex items-center justify-between gap-3 rounded-xl border border-border bg-popover/95 px-3.5 py-2.5 text-xs shadow-elevated backdrop-blur-sm md:absolute md:-right-4 md:-top-10 md:mt-0">
                   <div>
                     <p className="text-[11px] text-muted-foreground">{t('landing.floatAnnualLabel')}</p>
                     <p className="font-display text-sm font-bold tabular-nums text-emerald-700 dark:text-emerald-400">

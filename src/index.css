@@ -24,6 +24,7 @@
   --color-destructive: var(--accent-danger);
   --color-destructive-foreground: #ffffff;
   --color-border: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
   --color-input: var(--border-subtle);
   --color-ring: var(--accent-primary);
 }
@@ -119,6 +120,15 @@
 }
 
 .shadow-elevated {
+  box-shadow: var(--shadow-elevated);
+}
+
+.card-interactive {
+  transition: border-color 150ms ease, box-shadow 180ms ease, transform 150ms ease;
+}
+
+.card-interactive:hover {
+  border-color: var(--border-strong);
   box-shadow: var(--shadow-elevated);
 }
 

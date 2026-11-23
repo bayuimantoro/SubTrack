@@ -266,7 +266,7 @@ export function SubscriptionsPage() {
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-border bg-muted/40 text-xs text-muted-foreground">
+              <thead className="border-b border-border bg-muted/40 text-[11px] uppercase tracking-wider text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3 font-medium">{t('subs.colService')}</th>
                   <th className="px-4 py-3 font-medium">{t('subs.colCategory')}</th>
@@ -379,7 +379,7 @@ export function SubscriptionsPage() {
           {filtered.map((sub) => (
             <Card
               key={sub.id}
-              className="flex flex-col justify-between transition-all duration-150 hover:border-zinc-500/60 hover:bg-card/90 focus-within:border-emerald-500/40"
+              className="card-interactive flex flex-col justify-between focus-within:border-emerald-500/40"
             >
               <CardContent className="p-5 space-y-4">
                 <div className="flex items-start justify-between gap-3">
@@ -415,7 +415,7 @@ export function SubscriptionsPage() {
 
                 <div className="flex items-baseline justify-between border-t border-border pt-3">
                   <div>
-                    <div className="text-lg font-bold tabular-nums">
+                    <div className="font-display text-lg font-bold tracking-tight tabular-nums">
                       {formatCurrency(sub.price, sub.currency)}
                     </div>
                     <div className="text-xs text-muted-foreground">

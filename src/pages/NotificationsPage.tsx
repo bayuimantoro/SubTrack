@@ -101,7 +101,7 @@ export function NotificationsPage() {
           <CardDescription>{t('notif.prefsDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <label className="flex items-center justify-between rounded-lg border border-border p-3 cursor-pointer">
+          <label className="flex items-center justify-between rounded-xl border border-border bg-background/60 p-3.5 transition-colors hover:bg-accent/40 cursor-pointer">
             <div>
               <div className="text-sm font-medium">{t('notif.enableInApp')}</div>
               <div className="text-xs text-muted-foreground">{t('notif.enableInAppDesc')}</div>
@@ -120,7 +120,7 @@ export function NotificationsPage() {
             {toggles.map((item) => (
               <label
                 key={item.key}
-                className="flex items-center justify-between rounded-lg border border-border p-3 cursor-pointer"
+                className="flex items-center justify-between rounded-xl border border-border p-3.5 transition-colors hover:bg-accent/40 cursor-pointer"
               >
                 <div>
                   <div className="text-sm font-medium">{item.label}</div>
@@ -159,8 +159,10 @@ export function NotificationsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="h-4 w-4 text-emerald-400" />
+          <CardTitle className="flex items-center gap-2.5">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/12 text-emerald-600 dark:text-emerald-400">
+              <Bell className="h-3.5 w-3.5" aria-hidden="true" />
+            </span>
             {t('notif.activeAlerts')}
           </CardTitle>
           <CardDescription>{t('notif.activeAlertsDesc')}</CardDescription>

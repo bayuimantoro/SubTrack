@@ -50,8 +50,9 @@ const TOOLTIP_STYLE = {
   backgroundColor: 'var(--bg-elevated)',
   borderColor: 'var(--border-subtle)',
   color: 'var(--text-primary)',
-  borderRadius: '8px',
+  borderRadius: '10px',
   fontSize: '12px',
+  boxShadow: 'var(--shadow-elevated)',
 }
 
 export function DashboardPage() {
@@ -278,37 +279,39 @@ export function DashboardPage() {
             {t('nav.installments')} <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-lg border border-border bg-background/60 p-3.5">
-            <div className="text-xs text-muted-foreground">{t('dash.combinedMonthly')}</div>
-            <div className="mt-1 text-xl font-bold tabular-nums">
+        <CardContent className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.06] p-4">
+            <div className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
+              {t('dash.combinedMonthly')}
+            </div>
+            <div className="mt-1.5 font-display text-xl font-bold tracking-tight tabular-nums">
               {formatCurrency(combinedMonthlyObligations, currency)}
             </div>
           </div>
-          <div className="rounded-lg border border-border bg-background/60 p-3.5">
+          <div className="rounded-xl border border-border bg-background/70 p-4">
             <div className="text-xs text-muted-foreground">{t('dash.outstandingBalance')}</div>
-            <div className="mt-1 text-xl font-bold tabular-nums">
+            <div className="mt-1.5 font-display text-xl font-bold tracking-tight tabular-nums">
               {formatCurrency(instSummary.totalOutstandingBalance, currency)}
             </div>
           </div>
-          <div className="rounded-lg border border-border bg-background/60 p-3.5">
+          <div className="rounded-xl border border-border bg-background/70 p-4">
             <div className="text-xs text-muted-foreground">{t('dash.activeInstallmentPlans')}</div>
-            <div className="mt-1 text-xl font-bold tabular-nums">
+            <div className="mt-1.5 font-display text-xl font-bold tracking-tight tabular-nums">
               {formatNumber(instSummary.activePlanCount)}
             </div>
           </div>
-          <div className="rounded-lg border border-border bg-background/60 p-3.5">
+          <div className="rounded-xl border border-border bg-background/70 p-4">
             <div className="text-xs text-muted-foreground">{t('dash.overdueUpcoming')}</div>
-            <div className="mt-1 flex items-center gap-2 text-xl font-bold tabular-nums">
-              <span className={instAlerts.overdue.length > 0 ? 'text-red-400' : ''}>
+            <div className="mt-1.5 flex items-center gap-2 font-display text-xl font-bold tracking-tight tabular-nums">
+              <span className={instAlerts.overdue.length > 0 ? 'text-red-500 dark:text-red-400' : ''}>
                 {formatNumber(instAlerts.overdue.length)}
               </span>
-              <span className="text-xs font-normal text-muted-foreground">
+              <span className="font-sans text-xs font-normal text-muted-foreground">
                 {t('dash.overdueWord')}
               </span>
-              <span>·</span>
+              <span className="text-muted-foreground">·</span>
               <span>{formatNumber(instAlerts.dueToday.length + instAlerts.upcoming.length)}</span>
-              <span className="text-xs font-normal text-muted-foreground">
+              <span className="font-sans text-xs font-normal text-muted-foreground">
                 {t('dash.upcomingWord')}
               </span>
             </div>

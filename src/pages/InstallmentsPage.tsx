@@ -160,10 +160,12 @@ export function InstallmentsPage() {
             <CardTitle className="text-xs font-medium text-muted-foreground">
               {t('inst.monthlyObligations')}
             </CardTitle>
-            <CalendarClock className="h-4 w-4 text-emerald-400" aria-hidden="true" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/12 text-emerald-600 dark:text-emerald-400">
+              <CalendarClock className="h-4 w-4" aria-hidden="true" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tabular-nums">
+            <div className="font-display text-2xl font-bold tracking-tight tabular-nums">
               {formatCurrency(summary.monthlyObligations, currency)}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">{t('inst.remainingThisMonth')}</p>
@@ -175,10 +177,12 @@ export function InstallmentsPage() {
             <CardTitle className="text-xs font-medium text-muted-foreground">
               {t('inst.outstandingBalance')}
             </CardTitle>
-            <Wallet className="h-4 w-4 text-blue-400" aria-hidden="true" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/12 text-blue-600 dark:text-blue-400">
+              <Wallet className="h-4 w-4" aria-hidden="true" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tabular-nums">
+            <div className="font-display text-2xl font-bold tracking-tight tabular-nums">
               {formatCurrency(summary.totalOutstandingBalance, currency)}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -192,10 +196,12 @@ export function InstallmentsPage() {
             <CardTitle className="text-xs font-medium text-muted-foreground">
               {t('inst.activePlans')}
             </CardTitle>
-            <Landmark className="h-4 w-4 text-emerald-400" aria-hidden="true" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/12 text-emerald-600 dark:text-emerald-400">
+              <Landmark className="h-4 w-4" aria-hidden="true" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tabular-nums">
+            <div className="font-display text-2xl font-bold tracking-tight tabular-nums">
               {formatNumber(summary.activePlanCount)}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -209,13 +215,18 @@ export function InstallmentsPage() {
             <CardTitle className="text-xs font-medium text-muted-foreground">
               {t('inst.overdueInstallments')}
             </CardTitle>
-            <AlertTriangle
-              className={`h-4 w-4 ${summary.overdueCount > 0 ? 'text-red-400' : 'text-muted-foreground'}`}
-              aria-hidden="true"
-            />
+            <div
+              className={`flex h-8 w-8 items-center justify-center rounded-lg ${
+                summary.overdueCount > 0
+                  ? 'bg-red-500/12 text-red-600 dark:text-red-400'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tabular-nums">
+            <div className="font-display text-2xl font-bold tracking-tight tabular-nums">
               {formatNumber(summary.overdueCount)}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -318,7 +329,7 @@ export function InstallmentsPage() {
             return (
               <Card
                 key={plan.id}
-                className="flex flex-col justify-between transition-all duration-150 hover:border-zinc-500/60 hover:bg-card/90"
+                className="card-interactive flex flex-col justify-between"
               >
                 <CardContent className="p-5 space-y-4">
                   <div className="flex items-start justify-between gap-2">

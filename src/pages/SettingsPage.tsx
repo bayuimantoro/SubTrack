@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Download, LogOut, RotateCcw, Upload } from 'lucide-react'
+import { Coins, Download, Globe, LogOut, Palette, RotateCcw, ShieldCheck, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -115,11 +115,16 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-3xl space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle>{t('set.languageTitle')}</CardTitle>
-          <CardDescription>{t('set.languageDesc')}</CardDescription>
+        <CardHeader className="flex flex-row items-start gap-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/12 text-blue-600 dark:text-blue-400">
+            <Globe className="h-4 w-4" aria-hidden="true" />
+          </div>
+          <div className="space-y-1">
+            <CardTitle>{t('set.languageTitle')}</CardTitle>
+            <CardDescription>{t('set.languageDesc')}</CardDescription>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-1.5">
@@ -143,9 +148,14 @@ export function SettingsPage() {
 
       <form onSubmit={handleSave} className="space-y-6">
         <Card>
-          <CardHeader>
-            <CardTitle>{t('set.currencyTitle')}</CardTitle>
-            <CardDescription>{t('set.currencyDesc')}</CardDescription>
+          <CardHeader className="flex flex-row items-start gap-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/12 text-emerald-600 dark:text-emerald-400">
+              <Coins className="h-4 w-4" aria-hidden="true" />
+            </div>
+            <div className="space-y-1">
+              <CardTitle>{t('set.currencyTitle')}</CardTitle>
+              <CardDescription>{t('set.currencyDesc')}</CardDescription>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
@@ -170,7 +180,7 @@ export function SettingsPage() {
               </Select>
             </div>
 
-            <label className="flex items-center justify-between rounded-lg border border-border p-3 cursor-pointer">
+            <label className="flex items-center justify-between rounded-xl border border-border p-3.5 transition-colors hover:bg-accent/40 cursor-pointer">
               <div>
                 <div className="text-sm font-medium">{t('set.includePaused')}</div>
                 <div className="text-xs text-muted-foreground">
@@ -193,9 +203,14 @@ export function SettingsPage() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>{t('set.appearanceTitle')}</CardTitle>
-            <CardDescription>{t('set.appearanceDesc')}</CardDescription>
+          <CardHeader className="flex flex-row items-start gap-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/12 text-amber-600 dark:text-amber-400">
+              <Palette className="h-4 w-4" aria-hidden="true" />
+            </div>
+            <div className="space-y-1">
+              <CardTitle>{t('set.appearanceTitle')}</CardTitle>
+              <CardDescription>{t('set.appearanceDesc')}</CardDescription>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-1.5">
@@ -218,19 +233,24 @@ export function SettingsPage() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>{t('set.accountTitle')}</CardTitle>
-            <CardDescription>
-              {t('set.activeBackend')}{' '}
-              <span className="font-medium text-foreground">
-                {mode === 'supabase' ? t('storage.cloudDesc') : t('storage.localDesc')}
-              </span>
-              {authStatus === 'authenticated' && user?.email && (
-                <span className="block mt-1 text-xs text-muted-foreground">
-                  {t('set.signedInAs')} <strong className="text-foreground">{user.email}</strong>
+          <CardHeader className="flex flex-row items-start gap-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/12 text-emerald-600 dark:text-emerald-400">
+              <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+            </div>
+            <div className="space-y-1">
+              <CardTitle>{t('set.accountTitle')}</CardTitle>
+              <CardDescription>
+                {t('set.activeBackend')}{' '}
+                <span className="font-medium text-foreground">
+                  {mode === 'supabase' ? t('storage.cloudDesc') : t('storage.localDesc')}
                 </span>
-              )}
-            </CardDescription>
+                {authStatus === 'authenticated' && user?.email && (
+                  <span className="block mt-1 text-xs text-muted-foreground">
+                    {t('set.signedInAs')} <strong className="text-foreground">{user.email}</strong>
+                  </span>
+                )}
+              </CardDescription>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
@@ -403,7 +423,7 @@ export function SettingsPage() {
               </div>
 
               {(pendingImport.settings || pendingImport.notificationPrefs) && (
-                <label className="flex items-center justify-between rounded-lg border border-border p-3 cursor-pointer">
+                <label className="flex items-center justify-between rounded-xl border border-border p-3.5 transition-colors hover:bg-accent/40 cursor-pointer">
                   <span className="text-xs font-medium">{t('set.importIncludeSettings')}</span>
                   <input
                     type="checkbox"

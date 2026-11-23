@@ -145,7 +145,9 @@ export function CalendarPage() {
       <Card className="lg:col-span-2">
         <CardHeader className="flex flex-row items-center justify-between gap-2">
           <div>
-            <CardTitle className="text-base">{monthLabel}</CardTitle>
+            <CardTitle className="font-display text-lg font-bold tracking-tight">
+              {monthLabel}
+            </CardTitle>
             <CardDescription>
               {t('cal.dueSummary', {
                 count: formatNumber(events.length),
@@ -185,7 +187,7 @@ export function CalendarPage() {
         </CardHeader>
 
         <CardContent>
-          <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-muted-foreground mb-2">
+          <div className="mb-2 grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             {weekdays.map((day) => (
               <div key={day} className="py-1">
                 {day}

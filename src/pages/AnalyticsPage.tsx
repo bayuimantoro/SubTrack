@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowDownRight, ArrowUpRight, Minus } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, CalendarClock, Minus, TrendingUp, Wallet } from 'lucide-react'
 import {
   Area,
   AreaChart,
@@ -31,8 +31,9 @@ const TOOLTIP_STYLE = {
   backgroundColor: 'var(--bg-elevated)',
   borderColor: 'var(--border-subtle)',
   color: 'var(--text-primary)',
-  borderRadius: '8px',
+  borderRadius: '10px',
   fontSize: '12px',
+  boxShadow: 'var(--shadow-elevated)',
 }
 
 export function AnalyticsPage() {
@@ -125,13 +126,16 @@ export function AnalyticsPage() {
       {/* Top KPI Comparison */}
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground">
               {t('ana.normalizedMonthly')}
             </CardTitle>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/12 text-emerald-600 dark:text-emerald-400">
+              <Wallet className="h-4 w-4" aria-hidden="true" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tabular-nums">
+            <div className="font-display text-2xl font-bold tracking-tight tabular-nums">
               {formatCurrency(summary.monthlyTotal, currency)}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -141,29 +145,32 @@ export function AnalyticsPage() {
         </Card>
 
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground">
               {t('ana.thisVsNext')}
             </CardTitle>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/12 text-blue-600 dark:text-blue-400">
+              <TrendingUp className="h-4 w-4" aria-hidden="true" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2 text-2xl font-bold tabular-nums">
+            <div className="flex items-center gap-2 font-display text-2xl font-bold tracking-tight tabular-nums">
               {formatCurrency(nextMonth, currency)}
               <span
-                className={`inline-flex items-center text-xs font-medium ${
+                className={`inline-flex items-center rounded-full px-2 py-0.5 font-sans text-xs font-medium ${
                   momDiff > 0
-                    ? 'text-amber-400'
+                    ? 'bg-amber-500/12 text-amber-700 dark:text-amber-400'
                     : momDiff < 0
-                      ? 'text-emerald-400'
-                      : 'text-muted-foreground'
+                      ? 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-400'
+                      : 'bg-muted text-muted-foreground'
                 }`}
               >
                 {momDiff > 0 ? (
-                  <ArrowUpRight className="h-4 w-4" />
+                  <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
                 ) : momDiff < 0 ? (
-                  <ArrowDownRight className="h-4 w-4" />
+                  <ArrowDownRight className="h-3.5 w-3.5" aria-hidden="true" />
                 ) : (
-                  <Minus className="h-4 w-4" />
+                  <Minus className="h-3.5 w-3.5" aria-hidden="true" />
                 )}
                 {momPct > 0 ? `+${momPct}%` : `${momPct}%`}
               </span>
@@ -175,13 +182,16 @@ export function AnalyticsPage() {
         </Card>
 
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground">
               {t('ana.actualVsEstimated')}
             </CardTitle>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/12 text-amber-600 dark:text-amber-400">
+              <CalendarClock className="h-4 w-4" aria-hidden="true" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tabular-nums">
+            <div className="font-display text-2xl font-bold tracking-tight tabular-nums">
               {formatCurrency(summary.actualTotalSpent, currency)}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">

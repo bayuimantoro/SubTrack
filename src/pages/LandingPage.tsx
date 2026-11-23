@@ -48,10 +48,58 @@ const LOCALE_SHORT: Record<Locale, string> = {
   ja: 'JA',
 }
 
+function RevealBlock({
+  children,
+  className,
+  delayMs = 0,
+}: {
+  children: React.ReactNode
+  className?: string
+  delayMs?: number
+}) {
+  const ref = React.useRef<HTMLDivElement | null>(null)
+  const [visible, setVisible] = React.useState<boolean>(() => {
+    if (typeof window === 'undefined') return true
+    return (
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+      typeof IntersectionObserver === 'undefined'
+    )
+  })
+
+  React.useEffect(() => {
+    if (visible) return
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisible(true)
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -32px 0px' },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [visible])
+
+  return (
+    <div
+      ref={ref}
+      data-visible={visible ? 'true' : 'false'}
+      style={delayMs > 0 ? { transitionDelay: `${delayMs}ms` } : undefined}
+      className={cn('reveal-block', className)}
+    >
+      {children}
+    </div>
+  )
+}
+
 export function LandingPage() {
   const { locale, setLocale, t } = useI18n()
   const { enterLocalMode } = useAuth()
 
+  const pageRef = React.useRef<HTMLDivElement | null>(null)
   const heroRef = React.useRef<HTMLElement | null>(null)
   const [selectedSubs, setSelectedSubs] = React.useState<string[]>(['stream', 'music', 'cloud'])
   const [tenorMonths, setTenorMonths] = React.useState<(typeof TENOR_OPTIONS)[number]>(12)
@@ -59,26 +107,33 @@ export function LandingPage() {
     typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : true,
   )
 
-  // Scroll-craft: single rAF-throttled CSS custom property driver for hero depth planes (zero React re-renders)
+  // Scroll-craft: single rAF-throttled CSS custom property driver for hero depth & page progress (mobile + desktop, zero React re-renders)
   React.useEffect(() => {
-    const el = heroRef.current
-    if (!el || typeof window === 'undefined') return
+    const heroEl = heroRef.current
+    const pageEl = pageRef.current
+    if (!heroEl || !pageEl || typeof window === 'undefined') return
 
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const desktopQuery = window.matchMedia('(min-width: 768px)')
-
-    if (motionQuery.matches || !desktopQuery.matches) {
-      el.style.setProperty('--hero-p', '0')
+    if (motionQuery.matches) {
+      heroEl.style.setProperty('--hero-p', '0')
+      pageEl.style.setProperty('--page-p', '0')
       return
     }
 
     let rafId = 0
     const updateProgress = () => {
       rafId = 0
-      const rect = el.getBoundingClientRect()
+      const rect = heroEl.getBoundingClientRect()
       const travel = Math.max(rect.height * 0.75, 1)
-      const progress = Math.min(Math.max(-rect.top / travel, 0), 1)
-      el.style.setProperty('--hero-p', progress.toFixed(4))
+      const heroProgress = Math.min(Math.max(-rect.top / travel, 0), 1)
+      heroEl.style.setProperty('--hero-p', heroProgress.toFixed(4))
+
+      const maxScroll = Math.max(
+        document.documentElement.scrollHeight - window.innerHeight,
+        1,
+      )
+      const pageProgress = Math.min(Math.max(window.scrollY / maxScroll, 0), 1)
+      pageEl.style.setProperty('--page-p', pageProgress.toFixed(4))
     }
 
     const onScroll = () => {
@@ -97,6 +152,12 @@ export function LandingPage() {
       if (rafId !== 0) window.cancelAnimationFrame(rafId)
     }
   }, [])
+
+  const cycleLocale = () => {
+    const idx = SUPPORTED_LOCALES.indexOf(locale)
+    const next = SUPPORTED_LOCALES[(idx + 1) % SUPPORTED_LOCALES.length]
+    setLocale(next)
+  }
 
   const toggleDemoSub = (id: string) => {
     setSelectedSubs((prev) =>
@@ -126,10 +187,13 @@ export function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-emerald-500/20 selection:text-emerald-700 dark:selection:text-emerald-200">
+    <div
+      ref={pageRef}
+      className="min-h-screen bg-background text-foreground selection:bg-emerald-500/20 selection:text-emerald-700 dark:selection:text-emerald-200"
+    >
       {/* Top Navigation */}
       <header className="sticky top-0 z-40 border-b border-border/80 bg-background/85 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4 sm:gap-3 sm:px-6 lg:px-8">
           <Link
             to="/"
             className="flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -141,7 +205,17 @@ export function LandingPage() {
           </Link>
 
           <nav className="flex items-center gap-1.5 sm:gap-2" aria-label="Landing navigation">
-            {/* Compact Locale Selector */}
+            {/* Mobile 1-tap Locale Cycle */}
+            <button
+              type="button"
+              onClick={cycleLocale}
+              aria-label={t('set.language')}
+              className="inline-flex h-9 items-center justify-center rounded-lg border border-border bg-card px-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-accent sm:hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {LOCALE_SHORT[locale]}
+            </button>
+
+            {/* Desktop Compact Locale Selector */}
             <div
               className="hidden items-center rounded-lg border border-border bg-card p-0.5 sm:flex"
               role="group"
@@ -181,20 +255,25 @@ export function LandingPage() {
 
             <Link
               to="/login"
-              className="inline-flex h-9 items-center justify-center rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="inline-flex h-9 items-center justify-center rounded-lg px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:px-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {t('auth.signIn')}
             </Link>
 
             <Link
               to="/register"
-              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 text-sm font-medium text-primary-foreground shadow-sm transition-all duration-150 hover:brightness-105 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground shadow-sm transition-all duration-150 hover:brightness-105 active:scale-[0.985] sm:px-3.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <span>{t('landing.ctaPrimary')}</span>
               <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
           </nav>
         </div>
+        {/* Scroll progress hairline */}
+        <div
+          aria-hidden="true"
+          className="scroll-progress-bar h-[2px] w-full bg-primary/85"
+        />
       </header>
 
       <main>
@@ -217,15 +296,23 @@ export function LandingPage() {
             <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-10">
               {/* Plane 1: Primary Headline & Actions */}
               <div className="hero-plane-copy space-y-6 lg:col-span-6">
-                <h1 className="font-display text-4xl font-extrabold leading-[1.08] tracking-[-0.03em] text-foreground sm:text-5xl lg:text-[3.4rem]">
+                <h1
+                  className="animate-landing-rise font-display text-[2.25rem] font-extrabold leading-[1.08] tracking-[-0.03em] text-foreground sm:text-5xl lg:text-[3.4rem]"
+                >
                   {t('landing.heroTitle')}
                 </h1>
 
-                <p className="max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+                <p
+                  className="animate-landing-rise max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg"
+                  style={{ animationDelay: '90ms' }}
+                >
                   {t('landing.heroSubtitle')}
                 </p>
 
-                <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center">
+                <div
+                  className="animate-landing-rise flex flex-col gap-3 pt-1 sm:flex-row sm:items-center"
+                  style={{ animationDelay: '160ms' }}
+                >
                   <Link
                     to="/register"
                     className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition-all duration-150 hover:brightness-105 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
@@ -263,9 +350,12 @@ export function LandingPage() {
               </div>
 
               {/* Plane 2 & 3: Layered Financial Ledger Subject + Foreground Depth Chips */}
-              <div className="relative lg:col-span-6">
+              <div
+                className="animate-landing-rise relative lg:col-span-6"
+                style={{ animationDelay: '220ms' }}
+              >
                 {/* Plane 2: Main Ledger Card */}
-                <div className="hero-plane-subject relative rounded-2xl border border-border bg-card p-5 shadow-elevated sm:p-6">
+                <div className="hero-plane-subject relative rounded-2xl border border-border bg-card/95 p-5 shadow-elevated ring-1 ring-inset ring-white/5 backdrop-blur-sm sm:p-6">
                   <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
                     <div>
                       <p className="text-xs font-medium text-muted-foreground">
@@ -276,7 +366,10 @@ export function LandingPage() {
                       </p>
                     </div>
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/12 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+                      <span className="relative flex h-2 w-2" aria-hidden="true">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                      </span>
                       {t('landing.previewStatusOk')}
                     </span>
                   </div>
@@ -349,26 +442,33 @@ export function LandingPage() {
                   </div>
                 </div>
 
-                {/* Plane 3A: Foreground Floating Reminder Chip (Desktop overlapping depth) */}
-                <div className="hero-plane-float-a mt-3 flex items-center gap-2.5 rounded-xl border border-border bg-popover/95 px-3.5 py-2.5 text-xs shadow-elevated backdrop-blur-sm md:absolute md:-bottom-7 md:-left-6 md:mt-0">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400">
-                    <Bell className="h-3.5 w-3.5" aria-hidden="true" />
+                {/* Mobile-overlapping / Desktop-floating Depth Chips */}
+                <div className="-mt-3 grid grid-cols-2 gap-2.5 px-2 md:mt-0 md:block md:px-0">
+                  {/* Plane 3A: Foreground Floating Reminder Chip */}
+                  <div className="hero-plane-float-a md:absolute md:-bottom-7 md:-left-6">
+                    <div className="animate-float-gentle flex items-center gap-2.5 rounded-xl border border-border bg-popover/95 px-3 py-2.5 text-xs shadow-elevated backdrop-blur-md sm:px-3.5">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                        <Bell className="h-3.5 w-3.5" aria-hidden="true" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-foreground">{t('landing.floatAlertTitle')}</p>
+                        <p className="truncate text-[11px] text-muted-foreground">{t('landing.floatAlertDesc')}</p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-semibold text-foreground">{t('landing.floatAlertTitle')}</p>
-                    <p className="text-[11px] text-muted-foreground">{t('landing.floatAlertDesc')}</p>
-                  </div>
-                </div>
 
-                {/* Plane 3B: Foreground Floating Annual Projection Chip (Desktop overlapping depth) */}
-                <div className="hero-plane-float-b mt-2.5 flex items-center justify-between gap-3 rounded-xl border border-border bg-popover/95 px-3.5 py-2.5 text-xs shadow-elevated backdrop-blur-sm md:absolute md:-right-4 md:-top-10 md:mt-0">
-                  <div>
-                    <p className="text-[11px] text-muted-foreground">{t('landing.floatAnnualLabel')}</p>
-                    <p className="font-display text-sm font-bold tabular-nums text-emerald-700 dark:text-emerald-400">
-                      {formatCurrency(16_968_000, 'IDR')}
-                    </p>
+                  {/* Plane 3B: Foreground Floating Annual Projection Chip */}
+                  <div className="hero-plane-float-b md:absolute md:-right-4 md:-top-10">
+                    <div className="animate-float-gentle-delayed flex items-center justify-between gap-2 rounded-xl border border-border bg-popover/95 px-3 py-2.5 text-xs shadow-elevated backdrop-blur-md sm:gap-3 sm:px-3.5">
+                      <div className="min-w-0">
+                        <p className="truncate text-[11px] text-muted-foreground">{t('landing.floatAnnualLabel')}</p>
+                        <p className="truncate font-display text-sm font-bold tabular-nums text-emerald-700 dark:text-emerald-400">
+                          {formatCurrency(16_968_000, 'IDR')}
+                        </p>
+                      </div>
+                      <Check className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                    </div>
                   </div>
-                  <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
                 </div>
               </div>
             </div>
@@ -377,7 +477,7 @@ export function LandingPage() {
 
         {/* ACT 2 — Signature Interactive Move: Live Cashflow & Installment Simulator */}
         <section className="border-b border-border/70 bg-sidebar/50 py-16 sm:py-24">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <RevealBlock className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <div className="max-w-2xl">
               <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
                 {t('landing.simTitle')}
@@ -533,14 +633,14 @@ export function LandingPage() {
                 </Button>
               </div>
             </div>
-          </div>
+          </RevealBlock>
         </section>
 
         {/* ACT 3 — Varied Editorial Feature Bands (No Repeated Identical Card Grids) */}
         <section className="py-16 sm:py-24">
           <div className="mx-auto max-w-6xl space-y-16 px-4 sm:px-6 sm:space-y-24 lg:px-8">
             {/* Band A: Installments — Simple & Advanced Transparency */}
-            <div className="grid items-center gap-8 lg:grid-cols-12 lg:gap-12">
+            <RevealBlock className="grid items-center gap-8 lg:grid-cols-12 lg:gap-12">
               <div className="space-y-4 lg:col-span-5">
                 <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
                   {t('landing.bandInstTitle')}
@@ -594,10 +694,10 @@ export function LandingPage() {
                   </div>
                 </dl>
               </div>
-            </div>
+            </RevealBlock>
 
             {/* Band B: Calendar, Multi-Currency & Full Data Ownership */}
-            <div className="grid items-center gap-8 lg:grid-cols-12 lg:gap-12">
+            <RevealBlock className="grid items-center gap-8 lg:grid-cols-12 lg:gap-12" delayMs={80}>
               <div className="order-2 rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6 lg:order-1 lg:col-span-7">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="rounded-xl border border-border/80 bg-background/60 p-4">
@@ -636,13 +736,13 @@ export function LandingPage() {
                   {t('landing.bandControlDesc')}
                 </p>
               </div>
-            </div>
+            </RevealBlock>
           </div>
         </section>
 
         {/* ACT 4 — Calm Commitment Close */}
         <section className="border-t border-border bg-sidebar/60 py-16 sm:py-20">
-          <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
+          <RevealBlock className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
             <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
               {t('landing.finalTitle')}
             </h2>
@@ -668,7 +768,7 @@ export function LandingPage() {
                 <span>{t('landing.ctaLocal')}</span>
               </Button>
             </div>
-          </div>
+          </RevealBlock>
         </section>
       </main>
 

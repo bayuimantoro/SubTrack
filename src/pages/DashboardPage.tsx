@@ -190,10 +190,14 @@ export function DashboardPage() {
             <CardTitle className="text-xs font-medium text-muted-foreground">
               {t('dash.activeSubs')}
             </CardTitle>
-            <CreditCard className="h-4 w-4 text-emerald-400" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/12 text-emerald-600 dark:text-emerald-400">
+              <CreditCard className="h-4 w-4" aria-hidden="true" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tabular-nums">{formatNumber(summary.activeCount)}</div>
+            <div className="font-display text-2xl font-bold tracking-tight tabular-nums">
+              {formatNumber(summary.activeCount)}
+            </div>
             <p className="mt-1 text-xs text-muted-foreground">
               {t('dash.pausedCancelled', {
                 paused: formatNumber(summary.pausedCount),
@@ -208,10 +212,12 @@ export function DashboardPage() {
             <CardTitle className="text-xs font-medium text-muted-foreground">
               {t('dash.monthlyRecurring')}
             </CardTitle>
-            <Wallet className="h-4 w-4 text-emerald-400" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/12 text-emerald-600 dark:text-emerald-400">
+              <Wallet className="h-4 w-4" aria-hidden="true" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tabular-nums">
+            <div className="font-display text-2xl font-bold tracking-tight tabular-nums">
               {formatCurrency(summary.monthlyTotal, currency)}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">{t('dash.normalizedDesc')}</p>
@@ -223,10 +229,12 @@ export function DashboardPage() {
             <CardTitle className="text-xs font-medium text-muted-foreground">
               {t('dash.estimatedAnnual')}
             </CardTitle>
-            <TrendingUp className="h-4 w-4 text-blue-400" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/12 text-blue-600 dark:text-blue-400">
+              <TrendingUp className="h-4 w-4" aria-hidden="true" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tabular-nums">
+            <div className="font-display text-2xl font-bold tracking-tight tabular-nums">
               {formatCurrency(summary.annualEstimate, currency)}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">{t('dash.projected12m')}</p>
@@ -238,10 +246,12 @@ export function DashboardPage() {
             <CardTitle className="text-xs font-medium text-muted-foreground">
               {t('dash.actualSpent')}
             </CardTitle>
-            <CalendarClock className="h-4 w-4 text-amber-400" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/12 text-amber-600 dark:text-amber-400">
+              <CalendarClock className="h-4 w-4" aria-hidden="true" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tabular-nums">
+            <div className="font-display text-2xl font-bold tracking-tight tabular-nums">
               {formatCurrency(summary.actualTotalSpent, currency)}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">{t('dash.verifiedHistory')}</p>

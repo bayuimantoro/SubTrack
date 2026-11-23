@@ -8,6 +8,7 @@ import { I18nProvider } from '@/hooks/useI18n'
 import { SubTrackProvider, useSubTrack } from '@/hooks/useSubTrack'
 import { AuthPage } from '@/pages/AuthPage'
 import { DashboardPage } from '@/pages/DashboardPage'
+import { LandingPage } from '@/pages/LandingPage'
 import { SubscriptionDetailPage } from '@/pages/SubscriptionDetailPage'
 import { SubscriptionsPage } from '@/pages/SubscriptionsPage'
 
@@ -68,7 +69,15 @@ function AppRoutes() {
   }
 
   if (status === 'unauthenticated') {
-    return <AuthPage />
+    return (
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<AuthPage initialView="login" />} />
+        <Route path="/register" element={<AuthPage initialView="register" />} />
+        <Route path="/forgot-password" element={<AuthPage initialView="forgot-password" />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    )
   }
 
   return (

@@ -477,6 +477,56 @@ const en = {
   'inst.sortOutstandingDesc': 'Outstanding (highest first)',
   'inst.sortOutstandingAsc': 'Outstanding (lowest first)',
   'inst.sortNameAsc': 'Name (A–Z)',
+
+  // Landing & Public Auth Navigation
+  'auth.backToHome': 'Back to home',
+  'landing.ctaPrimary': 'Start free',
+  'landing.ctaLocal': 'Try without account',
+  'landing.heroTitle': 'Every subscription and installment, clearly accounted for.',
+  'landing.heroSubtitle':
+    'Track recurring renewals, installment schedules, and upcoming due dates in one calm dashboard — synced to the cloud or stored privately on your device.',
+  'landing.trustPrivate': 'Private by default (RLS)',
+  'landing.trustMultiCurrency': 'Multi-currency (IDR, USD, EUR, MYR, JPY)',
+  'landing.trustLocalReady': 'Works offline in Local Mode',
+  'landing.previewMonthlyLabel': 'Combined monthly commitment',
+  'landing.previewStatusOk': 'On track',
+  'landing.previewSubMeta': 'Recurring · Auto-renew',
+  'landing.previewInstMeta': 'Installment · Month 5 of 12',
+  'landing.previewDueSoon': 'Due in 3 days',
+  'landing.previewProgressLabel': 'Installment progress',
+  'landing.floatAlertTitle': 'Renewal reminder',
+  'landing.floatAlertDesc': 'iCloud+ renews in 3 days',
+  'landing.floatAnnualLabel': 'Projected 12-month total',
+  'landing.simTitle': 'See your real monthly commitment before the bill arrives.',
+  'landing.simSubtitle':
+    'Toggle recurring services and adjust an installment tenor to see how small subscriptions and monthly payments add up over a year.',
+  'landing.simSubsHeading': 'Recurring subscriptions',
+  'landing.simInstHeading': 'Installment tenor',
+  'landing.simPrincipal': 'Principal {amount}',
+  'landing.simTotalMonthly': 'Estimated monthly total',
+  'landing.simAnnualLabel': 'Annualized commitment (12 mo)',
+  'landing.simTryCta': 'Open dashboard with your own numbers',
+  'landing.bandInstTitle': 'Transparent installments without spreadsheet guesswork.',
+  'landing.bandInstDesc':
+    'Start in Simple Mode with just principal, monthly payment, and tenor — or expand Advanced Mode for full interest and administrative fee breakdowns.',
+  'landing.bandInstPoint1': 'Real-time total payment and estimated interest & fees summary',
+  'landing.bandInstPoint2': 'Automatic monthly due-date schedules including month-end and leap years',
+  'landing.bandInstPoint3': 'Preserves paid records and manual edits whenever you update a plan',
+  'landing.bandControlTitle': 'Built for daily clarity, wherever you track your money.',
+  'landing.bandControlDesc':
+    'Combine renewal calendars, multi-currency conversion, and full JSON export/import so your financial records always remain yours.',
+  'landing.bandControlCard1Title': 'Billing calendar & reminders',
+  'landing.bandControlCard1Desc':
+    'Spot upcoming renewals and overdue installments at a glance with configurable reminder windows.',
+  'landing.bandControlCard2Title': 'Multi-currency analytics',
+  'landing.bandControlCard2Desc':
+    'Track subscriptions in IDR, USD, EUR, MYR, or JPY with automatic conversion into your preferred display currency.',
+  'landing.bandControlCard3Title': 'Cloud sync or Local Mode + JSON backup',
+  'landing.bandControlCard3Desc':
+    'Sign in to sync securely with Supabase, or stay 100% local in your browser and export/import JSON snapshots anytime.',
+  'landing.finalTitle': 'Take control of every recurring payment today.',
+  'landing.finalSubtitle':
+    'Create a free account to sync across devices, or launch Local Mode immediately without signing up.',
 } as const
 
 export type TranslationKey = keyof typeof en
@@ -927,6 +977,56 @@ const id: Record<TranslationKey, string> = {
   'inst.sortOutstandingDesc': 'Sisa tagihan (terbesar)',
   'inst.sortOutstandingAsc': 'Sisa tagihan (terkecil)',
   'inst.sortNameAsc': 'Nama (A–Z)',
+
+  // Landing & Public Auth Navigation
+  'auth.backToHome': 'Kembali ke beranda',
+  'landing.ctaPrimary': 'Mulai gratis',
+  'landing.ctaLocal': 'Coba tanpa akun',
+  'landing.heroTitle': 'Semua langganan dan cicilan, tercatat rapi tanpa kejutan.',
+  'landing.heroSubtitle':
+    'Pantau perpanjangan langganan, jadwal cicilan, dan tanggal jatuh tempo dalam satu dashboard yang tenang — sinkron ke cloud atau simpan privat di perangkat Anda.',
+  'landing.trustPrivate': 'Privat & terlindungi RLS',
+  'landing.trustMultiCurrency': 'Multi-mata uang (IDR, USD, EUR, MYR, JPY)',
+  'landing.trustLocalReady': 'Bisa langsung pakai Mode Lokal',
+  'landing.previewMonthlyLabel': 'Total komitmen bulanan',
+  'landing.previewStatusOk': 'Terkendali',
+  'landing.previewSubMeta': 'Berulang · Perpanjangan otomatis',
+  'landing.previewInstMeta': 'Cicilan · Bulan ke-5 dari 12',
+  'landing.previewDueSoon': 'Jatuh tempo 3 hari lagi',
+  'landing.previewProgressLabel': 'Progres pelunasan cicilan',
+  'landing.floatAlertTitle': 'Pengingat tagihan',
+  'landing.floatAlertDesc': 'iCloud+ diperpanjang 3 hari lagi',
+  'landing.floatAnnualLabel': 'Proyeksi 12 bulan',
+  'landing.simTitle': 'Hitung komitmen bulanan sebelum tagihan datang.',
+  'landing.simSubtitle':
+    'Aktifkan contoh layanan berlangganan dan geser tenor cicilan untuk melihat bagaimana pengeluaran kecil menumpuk dalam setahun.',
+  'landing.simSubsHeading': 'Langganan berulang',
+  'landing.simInstHeading': 'Tenor cicilan',
+  'landing.simPrincipal': 'Pokok {amount}',
+  'landing.simTotalMonthly': 'Estimasi total bulanan',
+  'landing.simAnnualLabel': 'Proyeksi komitmen 12 bulan',
+  'landing.simTryCta': 'Buka dashboard dengan data Anda sendiri',
+  'landing.bandInstTitle': 'Cicilan transparan tanpa ribet rumus spreadsheet.',
+  'landing.bandInstDesc':
+    'Mulai dari Mode Sederhana cukup dengan pokok, cicilan bulanan, dan tenor — atau buka Mode Lanjutan untuk rincian bunga dan biaya admin.',
+  'landing.bandInstPoint1': 'Ringkasan total pembayaran dan estimasi bunga & biaya secara real-time',
+  'landing.bandInstPoint2': 'Jadwal jatuh tempo bulanan otomatis, akurat untuk akhir bulan & tahun kabisat',
+  'landing.bandInstPoint3': 'Riwayat pembayaran dan ubahan manual tetap aman saat rencana diperbarui',
+  'landing.bandControlTitle': 'Dirancang untuk kejelasan harian, sepenuhnya milik Anda.',
+  'landing.bandControlDesc':
+    'Gabungkan kalender tagihan, konversi multi-mata uang, serta ekspor/impor JSON penuh agar catatan keuangan Anda selalu dalam kendali.',
+  'landing.bandControlCard1Title': 'Kalender tagihan & pengingat',
+  'landing.bandControlCard1Desc':
+    'Lihat perpanjangan terdekat dan cicilan jatuh tempo dalam satu tampilan dengan jendela pengingat yang bisa diatur.',
+  'landing.bandControlCard2Title': 'Analitik multi-mata uang',
+  'landing.bandControlCard2Desc':
+    'Catat langganan dalam IDR, USD, EUR, MYR, atau JPY dengan konversi otomatis ke mata uang utama Anda.',
+  'landing.bandControlCard3Title': 'Sinkronisasi Cloud atau Mode Lokal + Backup JSON',
+  'landing.bandControlCard3Desc':
+    'Masuk untuk sinkron aman lewat Supabase, atau gunakan 100% lokal di browser dan ekspor/impor cadangan JSON kapan saja.',
+  'landing.finalTitle': 'Kendalikan setiap tagihan rutin mulai hari ini.',
+  'landing.finalSubtitle':
+    'Buat akun gratis untuk sinkron lintas perangkat, atau langsung masuk ke Mode Lokal tanpa perlu mendaftar.',
 }
 
 const ms: Record<TranslationKey, string> = {
@@ -1375,6 +1475,56 @@ const ms: Record<TranslationKey, string> = {
   'inst.sortOutstandingDesc': 'Baki tertunggak (tertinggi)',
   'inst.sortOutstandingAsc': 'Baki tertunggak (terendah)',
   'inst.sortNameAsc': 'Nama (A–Z)',
+
+  // Landing & Public Auth Navigation
+  'auth.backToHome': 'Kembali ke laman utama',
+  'landing.ctaPrimary': 'Mula percuma',
+  'landing.ctaLocal': 'Cuba tanpa akaun',
+  'landing.heroTitle': 'Semua langganan dan ansuran, tersusun kemas tanpa kejutan.',
+  'landing.heroSubtitle':
+    'Jejak pembaharuan langganan, jadual ansuran, dan tarikh akhir dalam satu papan pemuka yang tenang — disegerak ke awan atau disimpan secara peribadi di peranti anda.',
+  'landing.trustPrivate': 'Peribadi dengan perlindungan RLS',
+  'landing.trustMultiCurrency': 'Pelbagai mata wang (IDR, USD, EUR, MYR, JPY)',
+  'landing.trustLocalReady': 'Berfungsi terus dalam Mod Tempatan',
+  'landing.previewMonthlyLabel': 'Jumlah komitmen bulanan',
+  'landing.previewStatusOk': 'Terkawal',
+  'landing.previewSubMeta': 'Berulang · Pembaharuan automatik',
+  'landing.previewInstMeta': 'Ansuran · Bulan ke-5 daripada 12',
+  'landing.previewDueSoon': 'Tamat tempoh dalam 3 hari',
+  'landing.previewProgressLabel': 'Kemajuan bayaran ansuran',
+  'landing.floatAlertTitle': 'Peringatan bil',
+  'landing.floatAlertDesc': 'iCloud+ diperbaharui dalam 3 hari',
+  'landing.floatAnnualLabel': 'Unjuran 12 bulan',
+  'landing.simTitle': 'Lihat komitmen bulanan sebenar sebelum bil tiba.',
+  'landing.simSubtitle':
+    'Togol contoh langganan berulang dan laraskan tempoh ansuran untuk melihat bagaimana perbelanjaan kecil terkumpul sepanjang tahun.',
+  'landing.simSubsHeading': 'Langganan berulang',
+  'landing.simInstHeading': 'Tempoh ansuran',
+  'landing.simPrincipal': 'Prinsipal {amount}',
+  'landing.simTotalMonthly': 'Anggaran jumlah bulanan',
+  'landing.simAnnualLabel': 'Unjuran komitmen 12 bulan',
+  'landing.simTryCta': 'Buka papan pemuka dengan data anda sendiri',
+  'landing.bandInstTitle': 'Ansuran telus tanpa tekaan hamparan.',
+  'landing.bandInstDesc':
+    'Mulakan dengan Mod Ringkas menggunakan prinsipal, bayaran bulanan dan tempoh — atau buka Mod Lanjutan untuk pecahan faedah dan yuran pentadbiran.',
+  'landing.bandInstPoint1': 'Ringkasan jumlah bayaran serta anggaran faedah & yuran secara masa nyata',
+  'landing.bandInstPoint2': 'Jadual tarikh akhir bulanan automatik termasuk hujung bulan & tahun lompat',
+  'landing.bandInstPoint3': 'Rekod bayaran dan suntingan manual kekal terpelihara apabila pelan dikemas kini',
+  'landing.bandControlTitle': 'Dibina untuk kejelasan harian, sepenuhnya milik anda.',
+  'landing.bandControlDesc':
+    'Gabungkan kalendar bil, penukaran pelbagai mata wang, dan eksport/import JSON penuh supaya rekod kewangan sentiasa di bawah kawalan anda.',
+  'landing.bandControlCard1Title': 'Kalendar bil & peringatan',
+  'landing.bandControlCard1Desc':
+    'Lihat pembaharuan akan datang dan ansuran tertunggak sekilas pandang dengan tempoh peringatan boleh laras.',
+  'landing.bandControlCard2Title': 'Analitik pelbagai mata wang',
+  'landing.bandControlCard2Desc':
+    'Jejak langganan dalam IDR, USD, EUR, MYR, atau JPY dengan penukaran automatik ke mata wang paparan pilihan anda.',
+  'landing.bandControlCard3Title': 'Segerak Awan atau Mod Tempatan + Sandaran JSON',
+  'landing.bandControlCard3Desc':
+    'Log masuk untuk segerak selamat melalui Supabase, atau kekal 100% tempatan di pelayar dan eksport/import salinan JSON bila-bila masa.',
+  'landing.finalTitle': 'Kawal setiap bayaran berulang bermula hari ini.',
+  'landing.finalSubtitle':
+    'Cipta akaun percuma untuk segerak merentas peranti, atau lancarkan Mod Tempatan serta-merta tanpa mendaftar.',
 }
 
 const ja: Record<TranslationKey, string> = {
@@ -1823,6 +1973,56 @@ const ja: Record<TranslationKey, string> = {
   'inst.sortOutstandingDesc': '残高（高い順）',
   'inst.sortOutstandingAsc': '残高（低い順）',
   'inst.sortNameAsc': '名前（A–Z）',
+
+  // Landing & Public Auth Navigation
+  'auth.backToHome': 'ホームへ戻る',
+  'landing.ctaPrimary': '無料で始める',
+  'landing.ctaLocal': 'アカウントなしで試す',
+  'landing.heroTitle': 'すべてのサブスクと分割払いを、ひとつの見やすい画面で。',
+  'landing.heroSubtitle':
+    '定期更新、分割スケジュール、支払期日を落ち着いたダッシュボードで一元管理。クラウド同期にも端末内のローカル利用にも対応しています。',
+  'landing.trustPrivate': 'RLS保護によるプライバシー設計',
+  'landing.trustMultiCurrency': '多通貨対応（IDR・USD・EUR・MYR・JPY）',
+  'landing.trustLocalReady': 'ローカルモードでオフライン動作',
+  'landing.previewMonthlyLabel': '毎月の固定支出合計',
+  'landing.previewStatusOk': '管理中',
+  'landing.previewSubMeta': '定期課金・自動更新',
+  'landing.previewInstMeta': '分割払い・5 / 12回目',
+  'landing.previewDueSoon': 'あと3日で支払期日',
+  'landing.previewProgressLabel': '分割払いの進捗',
+  'landing.floatAlertTitle': '更新リマインダー',
+  'landing.floatAlertDesc': 'iCloud+ があと3日で更新されます',
+  'landing.floatAnnualLabel': '12か月間の見込み合計',
+  'landing.simTitle': '請求が届く前に、毎月の負担をすぐ試算。',
+  'landing.simSubtitle':
+    'サブスクのオン・オフや分割回数を切り替え、小さな固定費が年間でどれだけ積み上がるかをその場で確認できます。',
+  'landing.simSubsHeading': '定期サブスクリプション',
+  'landing.simInstHeading': '分割回数',
+  'landing.simPrincipal': '元本 {amount}',
+  'landing.simTotalMonthly': '毎月の見込み合計',
+  'landing.simAnnualLabel': '年間見込み額（12か月）',
+  'landing.simTryCta': '自分のデータでダッシュボードを開く',
+  'landing.bandInstTitle': '表計算なしで、分割払いの内訳を明確に。',
+  'landing.bandInstDesc':
+    'シンプルモードでは元本・月額・回数だけで作成でき、詳細モードを開けば利息や手数料の内訳までそのまま管理できます。',
+  'landing.bandInstPoint1': '支払総額と利息・手数料の見込みをリアルタイムで計算',
+  'landing.bandInstPoint2': '月末日やうるう年も正確に反映した毎月の支払予定を自動生成',
+  'landing.bandInstPoint3': 'プラン編集時も支払済み履歴や手動編集した行を安全に保護',
+  'landing.bandControlTitle': '毎日の見通しを良くし、データはすべて自分の手元に。',
+  'landing.bandControlDesc':
+    '請求カレンダー、多通貨換算、JSONエクスポート／インポートを備え、記録をいつでも自由に管理できます。',
+  'landing.bandControlCard1Title': '請求カレンダーと通知',
+  'landing.bandControlCard1Desc':
+    '更新間近のサブスクや期限超過の分割払いを一目で確認でき、通知タイミングも柔軟に設定できます。',
+  'landing.bandControlCard2Title': '多通貨アナリティクス',
+  'landing.bandControlCard2Desc':
+    'IDR・USD・EUR・MYR・JPYの支払いを登録し、希望の表示通貨へ自動換算して集計します。',
+  'landing.bandControlCard3Title': 'クラウド同期またはローカルモード＋JSONバックアップ',
+  'landing.bandControlCard3Desc':
+    'Supabaseで複数端末と安全に同期することも、ブラウザ内のみで完結させてJSONで入出力することも可能です。',
+  'landing.finalTitle': 'すべての定期支出を、今日からすっきり管理。',
+  'landing.finalSubtitle':
+    '無料アカウントで端末間同期を始めるか、登録不要のローカルモードですぐにお試しください。',
 }
 
 export const TRANSLATIONS: Record<Locale, Record<TranslationKey, string>> = {

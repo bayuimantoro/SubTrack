@@ -4,9 +4,11 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
 
   --color-background: var(--bg-canvas);
   --color-foreground: var(--text-primary);
+  --color-sidebar: var(--bg-sidebar);
   --color-card: var(--bg-surface);
   --color-card-foreground: var(--text-primary);
   --color-popover: var(--bg-elevated);
@@ -27,31 +29,39 @@
 }
 
 :root {
-  --bg-canvas: #f8fafc;
+  --bg-canvas: #f6f8fa;
+  --bg-sidebar: #f0f3f7;
   --bg-surface: #ffffff;
   --bg-elevated: #f1f5f9;
-  --bg-hover: #e2e8f0;
+  --bg-hover: #e5eaf0;
   --border-subtle: #e2e8f0;
+  --border-strong: #cbd5e1;
   --text-primary: #09090b;
   --text-secondary: #52525b;
   --text-muted: #71717a;
   --accent-primary: #059669;
   --accent-primary-fg: #ffffff;
   --accent-danger: #dc2626;
+  --shadow-card: 0 1px 2px rgba(9, 9, 11, 0.04), 0 4px 12px -4px rgba(9, 9, 11, 0.06);
+  --shadow-elevated: 0 12px 32px -12px rgba(9, 9, 11, 0.14), 0 2px 6px rgba(9, 9, 11, 0.05);
 }
 
 .dark {
-  --bg-canvas: #09090b;
-  --bg-surface: #111114;
-  --bg-elevated: #18181b;
-  --bg-hover: #27272a;
-  --border-subtle: #27272a;
+  --bg-canvas: #09090c;
+  --bg-sidebar: #0d0d11;
+  --bg-surface: #121217;
+  --bg-elevated: #191920;
+  --bg-hover: #25252e;
+  --border-subtle: #24242d;
+  --border-strong: #32323e;
   --text-primary: #fafafa;
   --text-secondary: #a1a1aa;
-  --text-muted: #8b8b95;
+  --text-muted: #8b8b96;
   --accent-primary: #10b981;
   --accent-primary-fg: #022c22;
   --accent-danger: #ef4444;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 18px -8px rgba(0, 0, 0, 0.45);
+  --shadow-elevated: 0 20px 44px -16px rgba(0, 0, 0, 0.72), 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
 @layer base {
@@ -59,15 +69,96 @@
     border-color: var(--border-subtle);
   }
 
+  html {
+    scroll-behavior: smooth;
+    color-scheme: light dark;
+  }
+
   body {
     font-family: var(--font-sans);
     background-color: var(--bg-canvas);
     color: var(--text-primary);
+    caret-color: var(--accent-primary);
+    text-rendering: optimizeLegibility;
   }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  a {
+    text-underline-offset: 3px;
+  }
+
+  /* Subtle themed scrollbars */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--border-strong);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
+.shadow-elevated {
+  box-shadow: var(--shadow-elevated);
 }
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+/* Landing architectural grid background */
+.bg-grid-fintech {
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--border-subtle) 55%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--border-subtle) 55%, transparent) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Scroll-craft layered hero transforms driven by --hero-p (0..1) */
+.hero-plane-bg {
+  transform: translate3d(0, calc(var(--hero-p, 0) * -28px), 0) scale(calc(1 + var(--hero-p, 0) * 0.04));
+  will-change: transform;
+}
+
+.hero-plane-copy {
+  transform: translate3d(0, calc(var(--hero-p, 0) * -18px), 0);
+  opacity: calc(1 - var(--hero-p, 0) * 0.12);
+  will-change: transform, opacity;
+}
+
+.hero-plane-subject {
+  transform: translate3d(0, calc(var(--hero-p, 0) * -42px), 0) scale(calc(1 - var(--hero-p, 0) * 0.025));
+  will-change: transform;
+}
+
+.hero-plane-float-a {
+  transform: translate3d(calc(var(--hero-p, 0) * -14px), calc(var(--hero-p, 0) * -76px), 0);
+  will-change: transform;
+}
+
+.hero-plane-float-b {
+  transform: translate3d(calc(var(--hero-p, 0) * 16px), calc(var(--hero-p, 0) * -96px), 0);
+  will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -78,5 +169,15 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .hero-plane-bg,
+  .hero-plane-copy,
+  .hero-plane-subject,
+  .hero-plane-float-a,
+  .hero-plane-float-b {
+    transform: none !important;
+    opacity: 1 !important;
+    will-change: auto;
   }
 }

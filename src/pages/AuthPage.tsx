@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { Link } from 'react-router-dom'
 import { ArrowLeft, Eye, EyeOff, HardDrive, Layers, MailCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -182,17 +183,33 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
   const activeError = error ?? authError
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 text-foreground">
-      <div className="w-full max-w-md space-y-6">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background p-4 text-foreground">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-grid-fintech opacity-50"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-24 h-72 w-full max-w-lg rounded-full bg-emerald-500/10 blur-3xl"
+      />
+
+      <div className="relative z-10 w-full max-w-md space-y-6">
         <div className="flex flex-col items-center text-center">
+          <Link
+            to="/"
+            className="mb-4 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+            {t('auth.backToHome')}
+          </Link>
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
             <Layers className="h-5 w-5" aria-hidden="true" />
           </div>
-          <h1 className="mt-3 text-xl font-bold tracking-tight">SubTrack</h1>
+          <h1 className="mt-3 font-display text-2xl font-bold tracking-tight">SubTrack</h1>
           <p className="mt-1 text-xs text-muted-foreground">{t('app.taglineFull')}</p>
         </div>
 
-        <Card>
+        <Card className="shadow-elevated">
           {view === 'login' && (
             <>
               <CardHeader>

@@ -81,6 +81,51 @@ describe('billing-engine date calculations', () => {
     )
     expect(next).toBe('2026-03-30')
   })
+
+  it('sets next billing date one interval ahead when starting today (no immediate due-today alert)', () => {
+    const next = calculateNextBillingDate(
+      '2026-11-23',
+      'monthly',
+      null,
+      23,
+      '2026-11-23',
+    )
+    expect(next).toBe('2026-12-23')
+    expect(diffDays('2026-11-23', next)).toBe(30)
+
+    // A subscription started 1 month ago IS due today
+    const dueToday = calculateNextBillingDate(
+      '2026-10-23',
+      'monthly',
+      null,
+      23,
+      '2026-11-23',
+    )
+    expect(dueToday).toBe('2026-11-23')
+
+    // A subscription with a future startDate keeps that future date as first billing
+    const future = calculateNextBillingDate(
+      '2026-12-05',
+      'monthly',
+      null,
+      5,
+      '2026-11-23',
+    )
+    expect(future).toBe('2026-12-05')
+  })
+
+  it('does not double-advance nextBillingDate when recording an initial payment on startDate', () => {
+    const gemini = makeSub({
+      id: 'gemini-new',
+      serviceName: 'Gemini',
+      billingInterval: 'monthly',
+      startDate: '2026-11-23',
+      billingDay: 23,
+      nextBillingDate: '2026-12-23',
+    })
+
+    expect(advanceNextBillingDateAfterPayment(gemini, '2026-11-23')).toBe('2026-12-23')
+  })
 })
 
 describe('billing-engine normalization and spending summary', () => {

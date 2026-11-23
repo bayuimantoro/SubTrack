@@ -100,13 +100,13 @@ export function AppShell() {
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
       {/* Desktop Sidebar */}
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-card md:flex">
+      <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-sidebar md:flex">
         <div className="flex h-16 items-center gap-2.5 border-b border-border px-5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Layers className="h-4 w-4" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+            <Layers className="h-4 w-4" aria-hidden="true" />
           </div>
           <div>
-            <div className="text-sm font-semibold tracking-tight">SubTrack</div>
+            <div className="font-display text-sm font-bold tracking-tight">SubTrack</div>
             <div className="text-[11px] text-muted-foreground">{t('app.tagline')}</div>
           </div>
         </div>
@@ -119,30 +119,43 @@ export function AppShell() {
               end={to === '/'}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  'group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                   isActive
-                    ? 'bg-accent text-foreground'
+                    ? 'bg-card text-foreground shadow-card ring-1 ring-border/80'
                     : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
                 )
               }
             >
-              <span className="flex items-center gap-2.5">
-                <Icon className="h-4 w-4" aria-hidden="true" />
-                {t(labelKey)}
-              </span>
-              {to === '/notifications' && alertCount > 0 && (
-                <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 tabular-nums">
-                  {alertCount}
-                </span>
+              {({ isActive }) => (
+                <>
+                  <span className="flex items-center gap-2.5">
+                    <Icon
+                      className={cn(
+                        'h-4 w-4 transition-colors',
+                        isActive
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'text-muted-foreground group-hover:text-foreground',
+                      )}
+                      aria-hidden="true"
+                    />
+                    {t(labelKey)}
+                  </span>
+                  {to === '/notifications' && alertCount > 0 && (
+                    <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 tabular-nums">
+                      {alertCount}
+                    </span>
+                  )}
+                </>
               )}
             </NavLink>
           ))}
         </nav>
 
         <div className="border-t border-border p-4 space-y-2">
-          <div className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 text-xs">
+          <div className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-xs shadow-sm">
             <span className="text-muted-foreground">{t('storage.label')}</span>
-            <span className="font-medium text-emerald-700 dark:text-emerald-400">
+            <span className="inline-flex items-center gap-1.5 font-medium text-emerald-700 dark:text-emerald-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
               {mode === 'supabase' ? t('storage.cloud') : t('storage.local')}
             </span>
           </div>
@@ -239,7 +252,7 @@ export function AppShell() {
 
       {/* Main Content */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-background px-4 sm:px-6 lg:px-8">
+        <header className="flex h-16 shrink-0 items-center justify-between border-b border-border/80 bg-background/85 px-4 backdrop-blur-md sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <button
               type="button"

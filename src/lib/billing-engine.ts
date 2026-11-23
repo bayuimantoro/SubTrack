@@ -89,8 +89,14 @@ export function calculateNextBillingDate(
   billingDay?: number,
   referenceDate: string = todayIsoDate(),
 ): string {
+  if (startDate > referenceDate) {
+    return startDate
+  }
+
   const anchorDay = billingDay ?? parseIsoDate(startDate).day
-  let cursor = startDate
+  // Start from the first renewal after startDate so a subscription starting today
+  // is due one interval from now rather than immediately on its start date.
+  let cursor = addIntervalToDate(startDate, interval, customIntervalDays, anchorDay)
   let guard = 0
   // ponytail: Iterative step from startDate preserves month-end billingDay accurately.
   // Upgrade path: O(1) modular month jump if subscriptions span >100 years.
@@ -330,6 +336,11 @@ export function advanceNextBillingDateAfterPayment(
 
   // Already advanced past this payment date (duplicate click or historical entry)
   if (sub.nextBillingDate > cycleDue) {
+    return sub.nextBillingDate
+  }
+
+  // Initial start-date payment when nextBillingDate already points to the first renewal
+  if (paidAt <= sub.startDate && sub.nextBillingDate >= cycleDue) {
     return sub.nextBillingDate
   }
 

@@ -303,8 +303,11 @@ export function InstallmentsPage() {
       {enrichedPlans.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
-            <p className="text-sm font-medium">{t('inst.emptyTitle')}</p>
-            <p className="text-xs text-muted-foreground">{t('inst.emptyDesc')}</p>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-container text-on-primary-container">
+              <Landmark className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <p className="font-display text-base font-bold tracking-tight">{t('inst.emptyTitle')}</p>
+            <p className="max-w-sm text-xs text-muted-foreground">{t('inst.emptyDesc')}</p>
             <Button
               size="sm"
               onClick={() => {
@@ -377,7 +380,7 @@ export function InstallmentsPage() {
                   <div className="grid grid-cols-2 gap-3 border-t border-border pt-3 text-xs">
                     <div>
                       <div className="text-muted-foreground">{t('inst.outstanding')}</div>
-                      <div className="mt-0.5 text-sm font-bold tabular-nums">
+                      <div className="mt-0.5 font-display text-base font-bold tracking-tight tabular-nums">
                         {formatCurrency(metrics.outstandingBalance, plan.currency)}
                       </div>
                     </div>
@@ -418,7 +421,7 @@ export function InstallmentsPage() {
 
                     <Link
                       to={`/installments/${plan.id}`}
-                      className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary-container/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="inline-flex min-h-8 items-center gap-1 rounded-full px-3 text-xs font-medium text-primary transition-colors hover:bg-primary-container/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       {metrics.effectiveStatus === 'completed' ? (
                         <>

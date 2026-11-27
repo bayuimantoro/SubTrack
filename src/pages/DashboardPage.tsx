@@ -274,7 +274,7 @@ export function DashboardPage() {
           </div>
           <Link
             to="/installments"
-            className="inline-flex items-center gap-1 rounded text-xs font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex min-h-8 shrink-0 items-center gap-1 rounded-full px-2.5 text-xs font-medium text-primary transition-colors hover:bg-primary-container/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {t('nav.installments')} <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
@@ -327,8 +327,8 @@ export function DashboardPage() {
               <CardTitle>{t('dash.monthlyProjection')}</CardTitle>
               <CardDescription>{t('dash.scheduled6m', { currency })}</CardDescription>
             </div>
-            <Button size="sm" variant="outline" onClick={() => setAddOpen(true)}>
-              <Plus className="h-3.5 w-3.5" />
+            <Button size="sm" variant="secondary" onClick={() => setAddOpen(true)}>
+              <Plus className="h-3.5 w-3.5" aria-hidden="true" />
               {t('dash.quickAdd')}
             </Button>
           </CardHeader>
@@ -435,7 +435,7 @@ export function DashboardPage() {
             </div>
             <Link
               to="/calendar"
-              className="inline-flex items-center gap-1 rounded text-xs font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="inline-flex min-h-8 shrink-0 items-center gap-1 rounded-full px-2.5 text-xs font-medium text-primary transition-colors hover:bg-primary-container/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {t('nav.calendar')} <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
@@ -453,7 +453,7 @@ export function DashboardPage() {
                     <Link
                       key={sub.id}
                       to={`/subscriptions/${sub.id}`}
-                      className="flex items-center justify-between py-3 transition-colors hover:bg-accent/40 -mx-2 px-2 rounded-lg"
+                      className="-mx-2 flex items-center justify-between rounded-xl px-2 py-3 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <ServiceIcon
@@ -464,11 +464,13 @@ export function DashboardPage() {
                         />
                         <div className="min-w-0">
                           <div className="truncate text-sm font-medium">{sub.serviceName}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {formatDate(sub.nextBillingDate)} ·{' '}
-                            {days === 0
-                              ? t('dash.dueToday')
-                              : t('dash.inDays', { days: formatNumber(days) })}
+                          <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                            <span className="tabular-nums">{formatDate(sub.nextBillingDate)}</span>
+                            <Badge variant={days <= 1 ? 'warning' : 'secondary'} className="px-2 py-0 text-[10px]">
+                              {days === 0
+                                ? t('dash.dueToday')
+                                : t('dash.inDays', { days: formatNumber(days) })}
+                            </Badge>
                           </div>
                         </div>
                       </div>
@@ -496,7 +498,7 @@ export function DashboardPage() {
             </div>
             <Link
               to="/subscriptions"
-              className="inline-flex items-center gap-1 rounded text-xs font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="inline-flex min-h-8 shrink-0 items-center gap-1 rounded-full px-2.5 text-xs font-medium text-primary transition-colors hover:bg-primary-container/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {t('dash.viewAll')} <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
@@ -506,7 +508,7 @@ export function DashboardPage() {
               <div className="py-6 text-center">
                 <p className="text-xs text-muted-foreground mb-3">{t('dash.emptySubs')}</p>
                 <Button size="sm" onClick={() => setAddOpen(true)}>
-                  <Plus className="h-4 w-4" /> {t('dash.addFirstSub')}
+                  <Plus className="h-4 w-4" aria-hidden="true" /> {t('dash.addFirstSub')}
                 </Button>
               </div>
             ) : (
@@ -515,7 +517,7 @@ export function DashboardPage() {
                   <Link
                     key={sub.id}
                     to={`/subscriptions/${sub.id}`}
-                    className="flex items-center justify-between py-3 transition-colors hover:bg-accent/40 -mx-2 px-2 rounded-lg"
+                    className="-mx-2 flex items-center justify-between rounded-xl px-2 py-3 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <ServiceIcon

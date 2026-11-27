@@ -19,7 +19,7 @@ import { useI18n } from '@/hooks/useI18n'
 import { useSubTrack } from '@/hooks/useSubTrack'
 import { todayIsoDate } from '@/lib/billing-engine'
 import { formatCurrency } from '@/lib/currency'
-import { getEffectiveItemStatus, getPlanMetrics } from '@/lib/installment-engine'
+import { calculatePlanProgressPct, getEffectiveItemStatus, getPlanMetrics } from '@/lib/installment-engine'
 import type { InstallmentItem } from '@/types/installment'
 
 export function InstallmentDetailPage() {
@@ -87,13 +87,18 @@ export function InstallmentDetailPage() {
 
   const metrics = getPlanMetrics(plan, items, payments, today)
   const financingTotal = plan.interestAmount + plan.adminFee + plan.otherCharges
+  const progressPct = calculatePlanProgressPct(
+    metrics.totalPaid,
+    plan.totalRepaymentAmount,
+    metrics.effectiveStatus,
+  )
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           to="/installments"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+          className="inline-flex min-h-8 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           {t('inst.backToList')}
@@ -104,7 +109,7 @@ export function InstallmentDetailPage() {
             metrics.effectiveStatus !== 'cancelled' && (
               <>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   onClick={() => {
                     setPayMode('settlement')
@@ -112,7 +117,7 @@ export function InstallmentDetailPage() {
                     setPayDialogOpen(true)
                   }}
                 >
-                  <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
+                  <ShieldCheck className="h-4 w-4" aria-hidden="true" />
                   {t('inst.earlySettlement')}
                 </Button>
                 <Button
@@ -120,7 +125,7 @@ export function InstallmentDetailPage() {
                   size="sm"
                   onClick={() => setCancelOpen(true)}
                 >
-                  <Ban className="h-4 w-4 text-amber-400" aria-hidden="true" />
+                  <Ban className="h-4 w-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
                   {t('inst.cancelPlan')}
                 </Button>
               </>
@@ -137,11 +142,11 @@ export function InstallmentDetailPage() {
       </div>
 
       {/* Plan Summary */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardContent className="grid gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4">
           <div className="sm:col-span-2">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-primary">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold text-primary">
                 {plan.providerName} · {t(`provider.${plan.providerType}`)}
               </span>
               <Badge
@@ -156,7 +161,9 @@ export function InstallmentDetailPage() {
                 {t(`common.status.${metrics.effectiveStatus}`)}
               </Badge>
             </div>
-            <h2 className="mt-1 text-xl font-bold">{plan.description}</h2>
+            <h2 className="mt-1.5 font-display text-xl font-bold tracking-tight sm:text-2xl">
+              {plan.description}
+            </h2>
             <p className="mt-1 text-xs text-muted-foreground">
               {t('inst.tenorInfo', {
                 tenor: formatNumber(plan.tenorMonths),
@@ -169,87 +176,105 @@ export function InstallmentDetailPage() {
             </p>
           </div>
 
-          <div>
+          <div className="rounded-xl border border-border/70 bg-background/70 p-4">
             <div className="text-xs text-muted-foreground">{t('inst.outstandingBalance')}</div>
-            <div className="mt-1 text-2xl font-bold tabular-nums">
+            <div className="mt-1 font-display text-2xl font-bold tracking-tight tabular-nums">
               {formatCurrency(metrics.outstandingBalance, plan.currency)}
             </div>
-            <div className="text-xs text-muted-foreground tabular-nums">
+            <div className="mt-0.5 text-xs text-muted-foreground tabular-nums">
               {t('inst.remainingCount', { count: formatNumber(metrics.remainingInstallments) })}
             </div>
           </div>
 
-          <div>
-            <div className="text-xs text-muted-foreground">{t('inst.totalPaidRecorded')}</div>
-            <div className="mt-1 text-2xl font-bold tabular-nums">
+          <div className="rounded-xl border border-primary/25 bg-primary-container/35 p-4">
+            <div className="text-xs font-medium text-on-primary-container">
+              {t('inst.totalPaidRecorded')}
+            </div>
+            <div className="mt-1 font-display text-2xl font-bold tracking-tight tabular-nums">
               {formatCurrency(metrics.totalPaid, plan.currency)}
             </div>
-            <div className="text-xs text-muted-foreground tabular-nums">
+            <div className="mt-0.5 text-xs text-muted-foreground tabular-nums">
               {t('inst.ofTotal', {
                 total: formatCurrency(plan.totalRepaymentAmount, plan.currency),
               })}
             </div>
           </div>
         </CardContent>
+        <div className="border-t border-border/80 bg-background/50 px-6 py-3.5">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-medium text-muted-foreground">{t('inst.repaymentProgress')}</span>
+            <span className="font-semibold tabular-nums text-primary">{progressPct}%</span>
+          </div>
+          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-secondary">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-300"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+        </div>
       </Card>
 
       {/* Principal vs Financing Breakdown */}
-      <div className="grid gap-4 sm:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-1">
-            <CardTitle className="text-xs text-muted-foreground">{t('inst.principal')}</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground">
+              {t('inst.principal')}
+            </CardTitle>
           </CardHeader>
-          <CardContent className="text-base font-semibold tabular-nums">
+          <CardContent className="font-display text-lg font-bold tracking-tight tabular-nums">
             {formatCurrency(plan.principalAmount, plan.currency)}
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-1">
-            <CardTitle className="text-xs text-muted-foreground">{t('inst.interest')}</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground">
+              {t('inst.interest')}
+            </CardTitle>
           </CardHeader>
-          <CardContent className="text-base font-semibold tabular-nums">
+          <CardContent className="font-display text-lg font-bold tracking-tight tabular-nums">
             {formatCurrency(plan.interestAmount, plan.currency)}
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-1">
-            <CardTitle className="text-xs text-muted-foreground">
+            <CardTitle className="text-xs font-medium text-muted-foreground">
               {t('inst.adminOtherFees')}
             </CardTitle>
           </CardHeader>
-          <CardContent className="text-base font-semibold tabular-nums">
+          <CardContent className="font-display text-lg font-bold tracking-tight tabular-nums">
             {formatCurrency(plan.adminFee + plan.otherCharges, plan.currency)}
           </CardContent>
         </Card>
-        <Card>
+        <Card className={financingTotal > 0 ? 'border-amber-500/25 bg-amber-500/[0.05]' : undefined}>
           <CardHeader className="pb-1">
-            <CardTitle className="text-xs text-muted-foreground">
+            <CardTitle className="text-xs font-medium text-muted-foreground">
               {t('inst.totalFinancingCost')}
             </CardTitle>
           </CardHeader>
-          <CardContent className="text-base font-semibold tabular-nums text-amber-700 dark:text-amber-400">
+          <CardContent className="font-display text-lg font-bold tracking-tight tabular-nums text-amber-700 dark:text-amber-400">
             {formatCurrency(financingTotal, plan.currency)}
           </CardContent>
         </Card>
       </div>
 
       {/* Installment Schedule Table */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle>{t('inst.scheduleTitle')}</CardTitle>
           <CardDescription>{t('inst.scheduleDesc')}</CardDescription>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
+        <CardContent className="overflow-x-auto p-0">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-border text-xs text-muted-foreground">
+            <thead className="border-y border-border bg-muted/40 text-[11px] uppercase tracking-wider text-muted-foreground">
               <tr>
-                <th className="py-2.5 pr-3 font-medium">#</th>
-                <th className="py-2.5 px-3 font-medium">{t('inst.colDueDate')}</th>
-                <th className="py-2.5 px-3 font-medium text-right">{t('inst.colScheduled')}</th>
-                <th className="py-2.5 px-3 font-medium text-right">{t('inst.colPaid')}</th>
-                <th className="py-2.5 px-3 font-medium text-right">{t('inst.colRemaining')}</th>
-                <th className="py-2.5 px-3 font-medium">{t('inst.colStatus')}</th>
-                <th className="py-2.5 pl-3 font-medium text-right">{t('inst.colAction')}</th>
+                <th className="py-3 pl-6 pr-3 font-medium">#</th>
+                <th className="py-3 px-3 font-medium">{t('inst.colDueDate')}</th>
+                <th className="py-3 px-3 font-medium text-right">{t('inst.colScheduled')}</th>
+                <th className="py-3 px-3 font-medium text-right">{t('inst.colPaid')}</th>
+                <th className="py-3 px-3 font-medium text-right">{t('inst.colRemaining')}</th>
+                <th className="py-3 px-3 font-medium">{t('inst.colStatus')}</th>
+                <th className="py-3 pl-3 pr-6 font-medium text-right">{t('inst.colAction')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -265,8 +290,13 @@ export function InstallmentDetailPage() {
                   effStatus === 'overdue'
 
                 return (
-                  <tr key={item.id}>
-                    <td className="py-3 pr-3 font-medium tabular-nums">
+                  <tr
+                    key={item.id}
+                    className={`transition-colors hover:bg-accent/35 ${
+                      effStatus === 'overdue' ? 'bg-red-500/[0.04]' : ''
+                    }`}
+                  >
+                    <td className="py-3 pl-6 pr-3 font-medium tabular-nums">
                       #{item.installmentNumber}
                     </td>
                     <td className="py-3 px-3 tabular-nums">{formatDate(item.dueDate)}</td>
@@ -294,18 +324,18 @@ export function InstallmentDetailPage() {
                         {t(`common.status.${effStatus}`)}
                       </Badge>
                     </td>
-                    <td className="py-3 pl-3 text-right">
+                    <td className="py-3 pl-3 pr-6 text-right">
                       {canPay ? (
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="secondary"
                           onClick={() => {
                             setPayMode('payment')
                             setSelectedItem(item)
                             setPayDialogOpen(true)
                           }}
                         >
-                          <CheckCircle2 className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                          <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
                           {t('inst.payBtn')}
                         </Button>
                       ) : (
@@ -334,7 +364,10 @@ export function InstallmentDetailPage() {
           ) : (
             <div className="divide-y divide-border">
               {payments.map((p) => (
-                <div key={p.id} className="flex items-center justify-between py-3 text-sm">
+                <div
+                  key={p.id}
+                  className="-mx-2 flex items-center justify-between rounded-xl px-2 py-3 text-sm transition-colors hover:bg-accent/35"
+                >
                   <div>
                     <div className="font-medium tabular-nums">{formatDate(p.paidAt)}</div>
                     <div className="text-xs text-muted-foreground capitalize">

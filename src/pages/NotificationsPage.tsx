@@ -144,8 +144,8 @@ export function NotificationsPage() {
             })}
           </div>
 
-          <div className="flex items-start gap-2 rounded-lg border border-border bg-background/60 p-3 text-xs text-muted-foreground">
-            <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-400" />
+          <div className="flex items-start gap-2.5 rounded-2xl border border-border/80 bg-secondary-container/45 p-3.5 text-xs text-muted-foreground">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
             <span>{t('notif.infoBanner')}</span>
           </div>
 
@@ -174,16 +174,19 @@ export function NotificationsPage() {
         </CardHeader>
         <CardContent>
           {activeAlerts.length === 0 ? (
-            <p className="py-8 text-center text-xs text-muted-foreground">
-              {t('notif.noSubAlerts')}
-            </p>
+            <div className="flex flex-col items-center gap-2 py-8 text-center">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-secondary-container text-on-secondary-container">
+                <Bell className="h-4 w-4" aria-hidden="true" />
+              </div>
+              <p className="text-xs text-muted-foreground">{t('notif.noSubAlerts')}</p>
+            </div>
           ) : (
             <div className="divide-y divide-border">
               {activeAlerts.map(({ sub, daysUntil }) => (
                 <Link
                   key={sub.id}
                   to={`/subscriptions/${sub.id}`}
-                  className="flex items-center justify-between py-3 hover:bg-accent/40 -mx-2 px-2 rounded-lg transition-colors"
+                  className="-mx-2 flex items-center justify-between rounded-xl px-2 py-3 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <ServiceIcon
@@ -232,7 +235,7 @@ export function NotificationsPage() {
                 <Link
                   key={alert.item.id}
                   to={`/installments/${alert.plan.id}`}
-                  className="flex items-center justify-between py-3 hover:bg-accent/40 -mx-2 px-2 rounded-lg transition-colors"
+                  className="-mx-2 flex items-center justify-between rounded-xl px-2 py-3 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <div className="min-w-0">
                     <div className="truncate text-sm font-medium">

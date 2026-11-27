@@ -233,8 +233,11 @@ export function SubscriptionsPage() {
       {filtered.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
-            <p className="text-sm font-medium">{t('subs.noMatching')}</p>
-            <p className="text-xs text-muted-foreground">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-container text-on-primary-container">
+              <Search className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <p className="font-display text-base font-bold tracking-tight">{t('subs.noMatching')}</p>
+            <p className="max-w-sm text-xs text-muted-foreground">
               {subscriptions.length === 0 ? t('subs.emptyDesc') : t('subs.filterEmptyDesc')}
             </p>
             {subscriptions.length === 0 ? (
@@ -484,7 +487,7 @@ export function SubscriptionsPage() {
                     </Button>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     {sanitizeHttpUrl(sub.websiteUrl) && (
                       <a
                         href={sanitizeHttpUrl(sub.websiteUrl)!}
@@ -492,14 +495,14 @@ export function SubscriptionsPage() {
                         rel="noopener noreferrer"
                         aria-label={`Open ${sub.serviceName} website`}
                         title={`Open ${sub.serviceName} website`}
-                        className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
                         <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
                       </a>
                     )}
                     <Link
                       to={`/subscriptions/${sub.id}`}
-                      className="rounded text-xs font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="inline-flex min-h-8 items-center rounded-full px-3 text-xs font-medium text-primary transition-colors hover:bg-primary-container/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       {t('common.details')}
                     </Link>

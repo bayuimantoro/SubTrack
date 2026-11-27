@@ -101,8 +101,8 @@ export function AppShell() {
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
       {/* Desktop Sidebar */}
       <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-sidebar md:flex">
-        <div className="flex h-16 items-center gap-2.5 border-b border-border px-5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+        <div className="flex h-16 items-center gap-2.5 border-b border-border/80 px-5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
             <Layers className="h-4 w-4" aria-hidden="true" />
           </div>
           <div>
@@ -151,10 +151,10 @@ export function AppShell() {
           ))}
         </nav>
 
-        <div className="border-t border-border p-4 space-y-2">
-          <div className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-xs shadow-sm">
+        <div className="border-t border-border/80 p-4 space-y-2.5">
+          <div className="flex items-center justify-between rounded-2xl border border-border/80 bg-card px-3.5 py-2.5 text-xs shadow-xs">
             <span className="text-muted-foreground">{t('storage.label')}</span>
-            <span className="inline-flex items-center gap-1.5 font-medium text-primary">
+            <span className="inline-flex items-center gap-1.5 font-semibold text-primary">
               <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />
               {mode === 'supabase' ? t('storage.cloud') : t('storage.local')}
             </span>
@@ -169,7 +169,7 @@ export function AppShell() {
                 onClick={() => setLogoutOpen(true)}
                 aria-label={t('auth.signOut')}
                 title={t('auth.signOut')}
-                className="shrink-0 rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer"
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
               >
                 <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
@@ -198,27 +198,30 @@ export function AppShell() {
           aria-label="Mobile navigation"
         >
           <div
-            className="fixed inset-0 bg-black/60"
+            className="fixed inset-0 bg-foreground/45 backdrop-blur-xs dark:bg-black/75"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="relative z-10 flex w-64 flex-col border-r border-border bg-card">
-            <div className="flex h-16 items-center justify-between border-b border-border px-4">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <aside className="relative z-10 flex w-72 max-w-[82vw] flex-col rounded-r-3xl border-r border-border bg-card shadow-2xl">
+            <div className="flex h-16 items-center justify-between border-b border-border/80 px-4">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
                   <Layers className="h-4 w-4" aria-hidden="true" />
                 </div>
-                <span className="text-sm font-semibold">SubTrack</span>
+                <div>
+                  <div className="font-display text-sm font-bold tracking-tight">SubTrack</div>
+                  <div className="text-[11px] text-muted-foreground">{t('app.tagline')}</div>
+                </div>
               </div>
               <button
                 type="button"
                 aria-label={t('nav.closeMenu')}
                 onClick={() => setMobileOpen(false)}
-                className="rounded-md p-2 text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
               >
                 <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
-            <nav className="flex-1 space-y-1 p-3" aria-label="Mobile navigation">
+            <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="Mobile navigation">
               {NAV_ITEMS.map(({ to, labelKey, icon: Icon }) => (
                 <NavLink
                   key={to}
@@ -239,13 +242,55 @@ export function AppShell() {
                     {t(labelKey)}
                   </span>
                   {to === '/notifications' && alertCount > 0 && (
-                    <span className="rounded-full bg-primary-container px-2 py-0.5 text-[11px] font-semibold text-on-primary-container">
+                    <span className="rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground tabular-nums">
                       {alertCount}
                     </span>
                   )}
                 </NavLink>
               ))}
             </nav>
+            <div className="border-t border-border/80 p-4 space-y-2.5">
+              <div className="flex items-center justify-between rounded-2xl border border-border/80 bg-background/70 px-3.5 py-2 text-xs">
+                <span className="text-muted-foreground">{t('storage.label')}</span>
+                <span className="inline-flex items-center gap-1.5 font-semibold text-primary">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />
+                  {mode === 'supabase' ? t('storage.cloud') : t('storage.local')}
+                </span>
+              </div>
+              {authStatus === 'authenticated' && user?.email && (
+                <div className="flex items-center justify-between gap-2 px-1 text-xs">
+                  <span className="truncate text-muted-foreground" title={user.email}>
+                    {user.email}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileOpen(false)
+                      setLogoutOpen(true)
+                    }}
+                    aria-label={t('auth.signOut')}
+                    title={t('auth.signOut')}
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer"
+                  >
+                    <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
+                </div>
+              )}
+              {authStatus === 'local' && isSupabaseConfigured && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs"
+                  onClick={() => {
+                    setMobileOpen(false)
+                    exitLocalMode()
+                  }}
+                >
+                  {t('auth.signInToCloud')}
+                </Button>
+              )}
+            </div>
           </aside>
         </div>
       )}
@@ -259,7 +304,7 @@ export function AppShell() {
               aria-label={t('nav.openMenu')}
               title={t('nav.openMenu')}
               onClick={() => setMobileOpen(true)}
-              className="rounded-lg border border-border p-2 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden cursor-pointer"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden cursor-pointer"
             >
               <Menu className="h-4 w-4" aria-hidden="true" />
             </button>

@@ -195,15 +195,15 @@ export function SubscriptionDetailPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           to="/subscriptions"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+          className="inline-flex min-h-8 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           {t('subs.backToList')}
         </Link>
 
         <div className="flex flex-wrap items-center gap-2">
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={() => void handleMarkPaid()}
             disabled={recording || currentCyclePaid || sub.status === 'cancelled'}
@@ -213,7 +213,7 @@ export function SubscriptionDetailPage() {
                 : undefined
             }
           >
-            <CheckCircle2 className="h-4 w-4 text-primary" />
+            <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
             {recording
               ? t('subs.recording')
               : currentCyclePaid
@@ -231,7 +231,7 @@ export function SubscriptionDetailPage() {
                 : undefined
             }
           >
-            <SkipForward className="h-4 w-4 text-amber-400" />
+            <SkipForward className="h-4 w-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
             {currentCycleSkipped && !currentCyclePaid
               ? t('subs.cycleSkipped')
               : t('subs.skipCycle')}
@@ -242,15 +242,15 @@ export function SubscriptionDetailPage() {
             onClick={openRefundModal}
             disabled={recording || netSpent <= 0}
           >
-            <RotateCcw className="h-4 w-4 text-blue-400" />
+            <RotateCcw className="h-4 w-4 text-sky-600 dark:text-sky-400" aria-hidden="true" />
             {t('subs.recordRefund')}
           </Button>
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-            <Edit2 className="h-4 w-4" />
+            <Edit2 className="h-4 w-4" aria-hidden="true" />
             {t('common.edit')}
           </Button>
           <Button variant="destructive" size="sm" onClick={() => setDeleteOpen(true)}>
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
             {t('common.delete')}
           </Button>
         </div>
@@ -267,8 +267,10 @@ export function SubscriptionDetailPage() {
               size="lg"
             />
             <div>
-              <div className="flex items-center gap-2.5">
-                <h2 className="text-xl font-bold tracking-tight">{sub.serviceName}</h2>
+              <div className="flex flex-wrap items-center gap-2.5">
+                <h2 className="font-display text-xl font-bold tracking-tight sm:text-2xl">
+                  {sub.serviceName}
+                </h2>
                 <Badge
                   variant={
                     sub.status === 'active'
@@ -291,10 +293,10 @@ export function SubscriptionDetailPage() {
           </div>
 
           <div className="sm:text-right">
-            <div className="text-2xl font-bold tabular-nums">
+            <div className="font-display text-2xl font-bold tracking-tight tabular-nums sm:text-3xl">
               {formatCurrency(sub.price, sub.currency)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
               ≈ {formatCurrency(Math.round(monthlyNormalized), sub.currency)}/mo ·{' '}
               {formatCurrency(Math.round(annualNormalized), sub.currency)}/yr
             </p>
@@ -308,36 +310,36 @@ export function SubscriptionDetailPage() {
           <CardHeader>
             <CardTitle>{t('subs.infoTitle')}</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2 text-sm">
-            <div>
+          <CardContent className="grid gap-3 sm:grid-cols-2 text-sm">
+            <div className="rounded-xl border border-border/70 bg-background/70 p-3.5">
               <div className="text-xs text-muted-foreground">{t('subs.nextPaymentDate')}</div>
-              <div className="mt-1 flex items-center gap-1.5 font-medium tabular-nums">
-                <Calendar className="h-4 w-4 text-primary" />
+              <div className="mt-1.5 flex items-center gap-1.5 font-medium tabular-nums">
+                <Calendar className="h-4 w-4 text-primary" aria-hidden="true" />
                 {sub.status === 'cancelled'
                   ? t('common.status.cancelled')
                   : formatDate(nextUnpaidDate)}
               </div>
               {sub.status !== 'cancelled' && isCycleClosed && (
-                <div className="mt-0.5 text-[11px] text-primary">
+                <div className="mt-1 text-[11px] font-medium text-primary">
                   {currentCyclePaid ? t('subs.cycleAlreadyPaid') : t('subs.cycleSkipped')} ·{' '}
                   {t('subs.nextUnpaidCycle', { date: formatDate(nextUnpaidDate) })}
                 </div>
               )}
             </div>
-            <div>
+            <div className="rounded-xl border border-border/70 bg-background/70 p-3.5">
               <div className="text-xs text-muted-foreground">{t('subs.startDate')}</div>
-              <div className="mt-1 font-medium tabular-nums">{formatDate(sub.startDate)}</div>
+              <div className="mt-1.5 font-medium tabular-nums">{formatDate(sub.startDate)}</div>
             </div>
-            <div>
+            <div className="rounded-xl border border-border/70 bg-background/70 p-3.5">
               <div className="text-xs text-muted-foreground">{t('subs.paymentMethod')}</div>
-              <div className="mt-1 flex items-center gap-1.5 font-medium">
-                <CreditCard className="h-4 w-4 text-muted-foreground" />
+              <div className="mt-1.5 flex items-center gap-1.5 font-medium">
+                <CreditCard className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 {sub.paymentMethod ?? t('common.notSpecified')}
               </div>
             </div>
-            <div>
+            <div className="rounded-xl border border-border/70 bg-background/70 p-3.5">
               <div className="text-xs text-muted-foreground">{t('subs.website')}</div>
-              <div className="mt-1">
+              <div className="mt-1.5 truncate">
                 {sanitizeHttpUrl(sub.websiteUrl) ? (
                   <a
                     href={sanitizeHttpUrl(sub.websiteUrl)!}
@@ -345,30 +347,30 @@ export function SubscriptionDetailPage() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 rounded font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    {sub.websiteUrl}
-                    <ExternalLink className="h-3.5 w-3.5" />
+                    <span className="truncate">{sub.websiteUrl}</span>
+                    <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                   </a>
                 ) : (
                   <span className="text-muted-foreground">{t('common.notSpecified')}</span>
                 )}
               </div>
             </div>
-            <div className="sm:col-span-2">
+            <div className="rounded-xl border border-border/70 bg-background/70 p-3.5 sm:col-span-2">
               <div className="text-xs text-muted-foreground">{t('subs.notes')}</div>
-              <div className="mt-1 text-sm text-foreground">
+              <div className="mt-1.5 text-sm text-foreground">
                 {sub.notes || t('subs.noNotes')}
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-primary/25 bg-primary-container/35">
           <CardHeader>
             <CardTitle>{t('subs.totalSpentTitle')}</CardTitle>
             <CardDescription>{t('subs.totalSpentDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold tabular-nums">
+            <div className="font-display text-3xl font-bold tracking-tight tabular-nums">
               {formatCurrency(Math.max(0, totalSpent), sub.currency)}
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
@@ -396,7 +398,7 @@ export function SubscriptionDetailPage() {
               {history.map((entry) => (
                 <div
                   key={entry.id}
-                  className="flex items-center justify-between py-3 text-sm"
+                  className="-mx-2 flex items-center justify-between rounded-xl px-2 py-3 text-sm transition-colors hover:bg-accent/35"
                 >
                   <div>
                     <div className="font-medium tabular-nums">{formatDate(entry.billedAt)}</div>

@@ -284,7 +284,7 @@ export function AnalyticsPage() {
                       t('chart.monthly'),
                     ]}
                   />
-                  <Bar dataKey="monthlyAmount" fill="#3b82f6" radius={[0, 6, 6, 0]} />
+                  <Bar dataKey="monthlyAmount" fill="var(--chart-primary)" radius={[0, 8, 8, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -309,11 +309,11 @@ export function AnalyticsPage() {
                 <Link
                   key={sub.id}
                   to={`/subscriptions/${sub.id}`}
-                  className="flex items-center justify-between py-3 hover:bg-accent/40 -mx-2 px-2 rounded-lg transition-colors"
+                  className="-mx-2 flex items-center justify-between rounded-xl px-2 py-3 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className="w-5 text-xs font-semibold text-muted-foreground tabular-nums">
-                      #{idx + 1}
+                    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary-container text-[11px] font-semibold text-on-secondary-container tabular-nums">
+                      {idx + 1}
                     </span>
                     <ServiceIcon
                       name={sub.serviceName}
@@ -345,7 +345,7 @@ export function AnalyticsPage() {
 
       {/* Installments & PayLater Analytics */}
       <div className="pt-2 space-y-4">
-        <h2 className="text-base font-semibold tracking-tight">{t('ana.instSection')}</h2>
+        <h2 className="font-display text-lg font-bold tracking-tight">{t('ana.instSection')}</h2>
 
         <div className="grid gap-4 sm:grid-cols-3">
           <Card>
@@ -355,7 +355,7 @@ export function AnalyticsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-lg font-bold tabular-nums">
+              <div className="font-display text-xl font-bold tracking-tight tabular-nums">
                 {formatCurrency(instSummary.totalPrincipal, currency)}
               </div>
               <p className="mt-1 text-xs text-amber-700 dark:text-amber-400 tabular-nums">
@@ -373,7 +373,7 @@ export function AnalyticsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-lg font-bold tabular-nums">
+              <div className="font-display text-xl font-bold tracking-tight tabular-nums">
                 {formatCurrency(instSummary.monthlyObligations, currency)}
               </div>
               <p className="mt-1 text-xs text-muted-foreground tabular-nums">
@@ -389,10 +389,12 @@ export function AnalyticsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-lg font-bold tabular-nums">{instProgressPct}%</div>
+              <div className="font-display text-xl font-bold tracking-tight tabular-nums">
+                {instProgressPct}%
+              </div>
               <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-secondary">
                 <div
-                  className="h-full rounded-full bg-primary"
+                  className="h-full rounded-full bg-primary transition-all duration-300"
                   style={{ width: `${instProgressPct}%` }}
                 />
               </div>
@@ -415,7 +417,7 @@ export function AnalyticsPage() {
                 {instSummary.byProvider.map((prov) => (
                   <div
                     key={prov.providerName}
-                    className="flex items-center justify-between py-3 text-sm"
+                    className="-mx-2 flex items-center justify-between rounded-xl px-2 py-3 text-sm transition-colors hover:bg-accent/35"
                   >
                     <div>
                       <div className="font-medium">{prov.providerName}</div>

@@ -76,7 +76,7 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
         aria-describedby={descriptionId}
       >
         <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-xs"
+          className="fixed inset-0 bg-foreground/45 backdrop-blur-xs dark:bg-black/75"
           onClick={() => onOpenChange(false)}
         />
         <div ref={panelRef} className="relative z-10 w-full max-w-lg">
@@ -99,7 +99,7 @@ export function DialogContent({
   return (
     <div
       className={cn(
-        'relative max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-card p-6 text-card-foreground shadow-xl',
+        'relative max-h-[90vh] overflow-y-auto rounded-3xl border border-border/90 bg-card p-6 text-card-foreground shadow-2xl sm:p-7',
         className,
       )}
     >
@@ -108,7 +108,7 @@ export function DialogContent({
           type="button"
           onClick={onClose}
           aria-label="Close dialog"
-          className="absolute right-4 top-4 rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+          className="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
         >
           <X className="h-4 w-4" aria-hidden="true" />
         </button>
@@ -122,7 +122,7 @@ export function DialogHeader({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('mb-4 space-y-1', className)} {...props} />
+  return <div className={cn('mb-5 space-y-1.5 pr-8', className)} {...props} />
 }
 
 export function DialogTitle({
@@ -130,7 +130,13 @@ export function DialogTitle({
   ...props
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   const { titleId } = React.useContext(DialogContext)
-  return <h2 id={titleId} className={cn('text-base font-semibold', className)} {...props} />
+  return (
+    <h2
+      id={titleId}
+      className={cn('font-display text-lg font-bold tracking-tight', className)}
+      {...props}
+    />
+  )
 }
 
 export function DialogDescription({
@@ -141,7 +147,7 @@ export function DialogDescription({
   return (
     <p
       id={descriptionId}
-      className={cn('text-xs text-muted-foreground', className)}
+      className={cn('text-sm text-muted-foreground', className)}
       {...props}
     />
   )

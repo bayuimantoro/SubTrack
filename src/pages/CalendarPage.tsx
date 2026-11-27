@@ -197,7 +197,7 @@ export function CalendarPage() {
 
           <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
             {Array.from({ length: firstWeekday }).map((_, idx) => (
-              <div key={`empty-${idx}`} className="min-h-11 sm:min-h-20 rounded-lg bg-background/40" />
+              <div key={`empty-${idx}`} className="min-h-11 sm:min-h-20 rounded-xl bg-background/40" />
             ))}
 
             {Array.from({ length: daysInMonth }).map((_, idx) => {
@@ -215,7 +215,7 @@ export function CalendarPage() {
                   aria-pressed={isSelected}
                   aria-label={`${iso}, ${dayEvents.length} due item${dayEvents.length === 1 ? '' : 's'}`}
                   className={cn(
-                    'flex min-h-11 sm:min-h-20 flex-col justify-between rounded-lg border p-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer',
+                    'flex min-h-11 sm:min-h-20 flex-col justify-between rounded-xl border p-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer',
                     dayEvents.length > 0
                       ? 'border-primary/35 bg-primary-container/35 hover:bg-primary-container/55'
                       : 'border-border bg-background/60 hover:bg-accent/40',
@@ -240,7 +240,7 @@ export function CalendarPage() {
                   </div>
 
                   {dayEvents.length > 0 && (
-                    <span className="mt-1 inline-flex w-fit rounded bg-primary-container px-1 text-[10px] font-semibold text-on-primary-container sm:hidden tabular-nums">
+                    <span className="mt-1 inline-flex w-fit rounded-full bg-primary-container px-1.5 text-[10px] font-semibold text-on-primary-container sm:hidden tabular-nums">
                       {dayEvents.length}
                     </span>
                   )}
@@ -308,7 +308,7 @@ export function CalendarPage() {
                 <Link
                   key={ev.id}
                   to={ev.href}
-                  className="flex items-center justify-between py-3 hover:bg-accent/40 -mx-2 px-2 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="-mx-2 flex items-center justify-between rounded-xl px-2 py-3 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     {ev.kind === 'subscription' && ev.category ? (

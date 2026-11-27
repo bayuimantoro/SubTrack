@@ -268,7 +268,7 @@ export function SettingsPage() {
               <p className="text-xs text-muted-foreground">{t('set.envMissingNotice')}</p>
             )}
 
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/80 pt-4">
               <div className="flex flex-wrap items-center gap-2">
                 <input
                   ref={fileInputRef}
@@ -406,7 +406,7 @@ export function SettingsPage() {
           </DialogHeader>
           {pendingImport && (
             <div className="space-y-4">
-              <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs space-y-1.5">
+              <div className="rounded-2xl border border-border bg-muted/30 p-3.5 text-xs space-y-1.5">
                 <div className="font-medium text-foreground">
                   {t('set.importPreviewSummary', {
                     subs: pendingImport.subscriptions.length,
@@ -423,16 +423,20 @@ export function SettingsPage() {
               </div>
 
               {(pendingImport.settings || pendingImport.notificationPrefs) && (
-                <label className="flex items-center justify-between rounded-xl border border-border p-3.5 transition-colors hover:bg-accent/40 cursor-pointer">
-                  <span className="text-xs font-medium">{t('set.importIncludeSettings')}</span>
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 accent-primary"
+                <div className="flex items-center justify-between gap-4 rounded-2xl border border-border p-3.5 transition-colors hover:bg-accent/40">
+                  <label
+                    htmlFor="set-import-include-settings"
+                    className="flex-1 cursor-pointer text-xs font-medium"
+                  >
+                    {t('set.importIncludeSettings')}
+                  </label>
+                  <Switch
+                    id="set-import-include-settings"
                     checked={includeImportSettings}
-                    onChange={(e) => setIncludeImportSettings(e.target.checked)}
+                    onCheckedChange={setIncludeImportSettings}
                     disabled={importing}
                   />
-                </label>
+                </div>
               )}
 
               <div className="flex justify-end gap-2 pt-1">

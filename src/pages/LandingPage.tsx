@@ -784,17 +784,18 @@ export function LandingPage() {
             <span>{t('app.tagline')}</span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {SUPPORTED_LOCALES.map((loc) => (
               <button
                 key={loc}
                 type="button"
                 onClick={() => setLocale(loc)}
+                aria-pressed={locale === loc}
                 className={cn(
-                  'rounded px-2 py-1 font-medium transition-colors cursor-pointer',
+                  'rounded-full px-2.5 py-1 font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                   locale === loc
-                    ? 'bg-accent text-foreground'
-                    : 'text-muted-foreground hover:text-foreground',
+                    ? 'bg-primary-container text-on-primary-container font-semibold'
+                    : 'text-muted-foreground hover:bg-accent hover:text-foreground',
                 )}
               >
                 {LOCALE_SHORT[loc]}

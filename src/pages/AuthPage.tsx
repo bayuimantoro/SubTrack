@@ -213,7 +213,9 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
           {view === 'login' && (
             <>
               <CardHeader>
-                <CardTitle className="text-base">{t('auth.loginTitle')}</CardTitle>
+                <CardTitle className="font-display text-lg font-bold tracking-tight">
+                  {t('auth.loginTitle')}
+                </CardTitle>
                 <CardDescription>{t('auth.loginDesc')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -309,7 +311,9 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
           {view === 'register' && (
             <>
               <CardHeader>
-                <CardTitle className="text-base">{t('auth.registerTitle')}</CardTitle>
+                <CardTitle className="font-display text-lg font-bold tracking-tight">
+                  {t('auth.registerTitle')}
+                </CardTitle>
                 <CardDescription>{t('auth.registerDesc')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -433,7 +437,9 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
                 <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary-container text-on-primary-container">
                   <MailCheck className="h-5 w-5" aria-hidden="true" />
                 </div>
-                <CardTitle className="text-base">{t('auth.verifyTitle')}</CardTitle>
+                <CardTitle className="font-display text-lg font-bold tracking-tight">
+                  {t('auth.verifyTitle')}
+                </CardTitle>
                 <CardDescription>{t('auth.verifyDesc')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -475,7 +481,9 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
           {view === 'forgot-password' && (
             <>
               <CardHeader>
-                <CardTitle className="text-base">{t('auth.forgotTitle')}</CardTitle>
+                <CardTitle className="font-display text-lg font-bold tracking-tight">
+                  {t('auth.forgotTitle')}
+                </CardTitle>
                 <CardDescription>{t('auth.forgotDesc')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -517,14 +525,16 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
                   </Button>
                 </form>
 
-                <button
-                  type="button"
-                  onClick={() => switchView('login')}
-                  className="inline-flex w-full items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-                  {t('auth.backToLogin')}
-                </button>
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => switchView('login')}
+                    className="inline-flex min-h-8 items-center justify-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring cursor-pointer"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+                    {t('auth.backToLogin')}
+                  </button>
+                </div>
               </CardContent>
             </>
           )}
@@ -532,7 +542,9 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
           {view === 'reset-password' && (
             <>
               <CardHeader>
-                <CardTitle className="text-base">{t('auth.resetTitle')}</CardTitle>
+                <CardTitle className="font-display text-lg font-bold tracking-tight">
+                  {t('auth.resetTitle')}
+                </CardTitle>
                 <CardDescription>
                   {hasRecoverySession ? t('auth.resetDescValid') : t('auth.resetDescInvalid')}
                 </CardDescription>
@@ -618,17 +630,19 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
                   </Button>
                 )}
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    clearPasswordRecovery()
-                    switchView('login')
-                  }}
-                  className="inline-flex w-full items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-                  {t('auth.returnToLogin')}
-                </button>
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      clearPasswordRecovery()
+                      switchView('login')
+                    }}
+                    className="inline-flex min-h-8 items-center justify-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring cursor-pointer"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+                    {t('auth.returnToLogin')}
+                  </button>
+                </div>
               </CardContent>
             </>
           )}
@@ -638,11 +652,10 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
         {view !== 'reset-password' && (
           <Card className="border-dashed">
             <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-start gap-2.5">
-                <HardDrive
-                  className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
-                  aria-hidden="true"
-                />
+              <div className="flex items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-secondary-container text-on-secondary-container">
+                  <HardDrive className="h-4 w-4" aria-hidden="true" />
+                </div>
                 <div className="text-xs">
                   <div className="font-medium text-foreground">{t('auth.localTitle')}</div>
                   <div className="text-muted-foreground">{t('auth.localDesc')}</div>

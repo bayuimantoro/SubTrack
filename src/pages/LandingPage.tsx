@@ -48,6 +48,78 @@ const LOCALE_SHORT: Record<Locale, string> = {
   ja: 'JA',
 }
 
+function AnimatedCurrency({ value }: { value: number }) {
+  const [displayed, setDisplayed] = React.useState(value)
+  const currentRef = React.useRef(value)
+  const reducedMotion =
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  React.useEffect(() => {
+    if (reducedMotion || typeof window === 'undefined') {
+      currentRef.current = value
+      return
+    }
+    const startVal = currentRef.current
+    if (startVal === value) return
+
+    let rafId = 0
+    const duration = 260
+    const startTime = performance.now()
+
+    const tick = (now: number) => {
+      const t = Math.min((now - startTime) / duration, 1)
+      const eased = 1 - (1 - t) ** 3
+      const next = Math.round(startVal + (value - startVal) * eased)
+      currentRef.current = next
+      setDisplayed(next)
+      if (t < 1) {
+        rafId = window.requestAnimationFrame(tick)
+      }
+    }
+
+    rafId = window.requestAnimationFrame(tick)
+    return () => {
+      if (rafId !== 0) window.cancelAnimationFrame(rafId)
+    }
+  }, [value, reducedMotion])
+
+  return <>{formatCurrency(reducedMotion ? value : displayed, 'IDR')}</>
+}
+
+function AnimatedHeroHeadline({ text }: { text: string }) {
+  const words = text.trim().split(/\s+/)
+  if (words.length <= 2) {
+    return (
+      <span className="inline-block overflow-hidden align-bottom">
+        <span className="animate-text-mask-up inline-block">{text}</span>
+      </span>
+    )
+  }
+
+  const accentStart = Math.max(words.length - 2, 1)
+  return (
+    <span aria-hidden="true">
+      {words.map((word, idx) => (
+        <React.Fragment key={`${word}-${idx}`}>
+          <span className="inline-block overflow-hidden align-bottom pb-[0.06em] -mb-[0.06em]">
+            <span
+              className={cn(
+                'animate-text-mask-up inline-block',
+                idx >= accentStart && 'text-matcha-shimmer',
+              )}
+              style={{ animationDelay: `${idx * 38}ms` }}
+            >
+              {word}
+            </span>
+          </span>
+          {idx < words.length - 1 ? ' ' : null}
+        </React.Fragment>
+      ))}
+    </span>
+  )
+}
+
 function RevealBlock({
   children,
   className,
@@ -297,9 +369,10 @@ export function LandingPage() {
               {/* Plane 1: Primary Headline & Actions */}
               <div className="hero-plane-copy space-y-6 lg:col-span-6">
                 <h1
-                  className="animate-landing-rise font-display text-[2.25rem] font-extrabold leading-[1.08] tracking-[-0.03em] text-foreground sm:text-5xl lg:text-[3.4rem]"
+                  aria-label={t('landing.heroTitle')}
+                  className="font-display text-[2.25rem] font-extrabold leading-[1.1] tracking-[-0.03em] text-foreground sm:text-5xl lg:text-[3.4rem]"
                 >
-                  {t('landing.heroTitle')}
+                  <AnimatedHeroHeadline key={locale} text={t('landing.heroTitle')} />
                 </h1>
 
                 <p
@@ -355,7 +428,7 @@ export function LandingPage() {
                 style={{ animationDelay: '220ms' }}
               >
                 {/* Plane 2: Main Ledger Card */}
-                <div className="hero-plane-subject relative rounded-3xl border border-border/80 bg-card/95 p-5 shadow-elevated ring-1 ring-inset ring-white/5 backdrop-blur-sm sm:p-6">
+                <div className="hero-plane-subject glass-surface relative rounded-3xl border p-5 shadow-elevated ring-1 ring-inset ring-white/10 sm:p-6">
                   <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
                     <div>
                       <p className="text-xs font-medium text-muted-foreground">
@@ -446,7 +519,7 @@ export function LandingPage() {
                 <div className="-mt-3 grid grid-cols-2 gap-2.5 px-2 md:mt-0 md:block md:px-0">
                   {/* Plane 3A: Foreground Floating Reminder Chip */}
                   <div className="hero-plane-float-a md:absolute md:-bottom-7 md:-left-6">
-                    <div className="animate-float-gentle flex items-center gap-2.5 rounded-xl border border-border bg-popover/95 px-3 py-2.5 text-xs shadow-elevated backdrop-blur-md sm:px-3.5">
+                    <div className="animate-float-gentle glass-surface flex items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-xs shadow-elevated ring-1 ring-inset ring-white/10 sm:px-3.5">
                       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400">
                         <Bell className="h-3.5 w-3.5" aria-hidden="true" />
                       </div>
@@ -459,7 +532,7 @@ export function LandingPage() {
 
                   {/* Plane 3B: Foreground Floating Annual Projection Chip */}
                   <div className="hero-plane-float-b md:absolute md:-right-4 md:-top-10">
-                    <div className="animate-float-gentle-delayed flex items-center justify-between gap-2 rounded-xl border border-border bg-popover/95 px-3 py-2.5 text-xs shadow-elevated backdrop-blur-md sm:gap-3 sm:px-3.5">
+                    <div className="animate-float-gentle-delayed glass-surface flex items-center justify-between gap-2 rounded-2xl border px-3 py-2.5 text-xs shadow-elevated ring-1 ring-inset ring-white/10 sm:gap-3 sm:px-3.5">
                       <div className="min-w-0">
                         <p className="truncate text-[11px] text-muted-foreground">{t('landing.floatAnnualLabel')}</p>
                         <p className="truncate font-display text-sm font-bold tabular-nums text-primary">
@@ -576,7 +649,7 @@ export function LandingPage() {
                       {t('landing.simTotalMonthly')}
                     </p>
                     <p className="mt-1 font-display text-3xl font-extrabold tracking-tight tabular-nums sm:text-4xl">
-                      {formatCurrency(demoTotalMonthly, 'IDR')}
+                      <AnimatedCurrency value={demoTotalMonthly} />
                     </p>
                   </div>
 
@@ -584,11 +657,11 @@ export function LandingPage() {
                   <div>
                     <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-muted">
                       <div
-                        className="h-full bg-primary transition-all duration-200"
+                        className="h-full bg-primary transition-all duration-300"
                         style={{ width: `${subSharePct}%` }}
                       />
                       <div
-                        className="h-full bg-blue-500 transition-all duration-200"
+                        className="h-full bg-tertiary transition-all duration-300"
                         style={{ width: `${100 - subSharePct}%` }}
                       />
                     </div>
@@ -599,16 +672,16 @@ export function LandingPage() {
                           {t('nav.subscriptions')}
                         </span>
                         <p className="mt-1 text-sm font-semibold text-foreground tabular-nums">
-                          {formatCurrency(demoMonthlySubs, 'IDR')}
+                          <AnimatedCurrency value={demoMonthlySubs} />
                         </p>
                       </div>
                       <div className="rounded-xl bg-muted/60 p-3">
                         <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                          <span className="h-2 w-2 rounded-full bg-blue-500" aria-hidden="true" />
+                          <span className="h-2 w-2 rounded-full bg-tertiary" aria-hidden="true" />
                           {t('nav.installments')}
                         </span>
                         <p className="mt-1 text-sm font-semibold text-foreground tabular-nums">
-                          {formatCurrency(demoMonthlyInstallment, 'IDR')}
+                          <AnimatedCurrency value={demoMonthlyInstallment} />
                         </p>
                       </div>
                     </div>
@@ -617,7 +690,7 @@ export function LandingPage() {
                   <div className="flex items-center justify-between border-t border-border pt-4 text-sm">
                     <span className="text-muted-foreground">{t('landing.simAnnualLabel')}</span>
                     <span className="font-semibold tabular-nums">
-                      {formatCurrency(demoAnnualized, 'IDR')}
+                      <AnimatedCurrency value={demoAnnualized} />
                     </span>
                   </div>
                 </div>

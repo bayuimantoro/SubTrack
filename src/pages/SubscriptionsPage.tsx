@@ -162,7 +162,7 @@ export function SubscriptionsPage() {
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
               aria-label={t('subs.sortNext')}
-              className="col-span-2 sm:w-44"
+              className="col-span-2 sm:w-52"
             >
               <option value="next_billing_asc">{t('subs.sortNext')}</option>
               <option value="price_desc">{t('subs.sortPriceDesc')}</option>
@@ -171,7 +171,7 @@ export function SubscriptionsPage() {
             </Select>
 
             <div
-              className="hidden items-center rounded-lg border border-border p-0.5 md:flex"
+              className="hidden items-center rounded-full border border-border bg-background p-0.5 md:flex"
               role="group"
               aria-label="View mode"
             >
@@ -181,9 +181,9 @@ export function SubscriptionsPage() {
                 aria-pressed={viewMode === 'grid'}
                 aria-label={t('subs.viewGrid')}
                 title={t('subs.viewGrid')}
-                className={`rounded-md p-1.5 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                className={`rounded-full p-1.5 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                   viewMode === 'grid'
-                    ? 'bg-accent text-foreground'
+                    ? 'bg-primary-container text-on-primary-container'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -195,9 +195,9 @@ export function SubscriptionsPage() {
                 aria-pressed={viewMode === 'table'}
                 aria-label={t('subs.viewTable')}
                 title={t('subs.viewTable')}
-                className={`rounded-md p-1.5 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                className={`rounded-full p-1.5 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                   viewMode === 'table'
-                    ? 'bg-accent text-foreground'
+                    ? 'bg-primary-container text-on-primary-container'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >

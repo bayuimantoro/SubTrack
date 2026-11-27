@@ -189,35 +189,35 @@ export function LandingPage() {
   return (
     <div
       ref={pageRef}
-      className="min-h-screen bg-background text-foreground selection:bg-primary-container selection:text-on-primary-container"
+      className="min-h-screen overflow-x-clip bg-background text-foreground selection:bg-primary-container selection:text-on-primary-container"
     >
       {/* Top Navigation */}
       <header className="sticky top-0 z-40 border-b border-border/80 bg-background/85 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4 sm:gap-3 sm:px-6 lg:px-8">
           <Link
             to="/"
-            className="flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex shrink-0 items-center gap-2.5 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
               <Layers className="h-4 w-4" aria-hidden="true" />
             </div>
-            <span className="font-display text-base font-bold tracking-tight">SubTrack</span>
+            <span className="font-display text-base font-bold tracking-tight whitespace-nowrap">SubTrack</span>
           </Link>
 
-          <nav className="flex items-center gap-1.5 sm:gap-2" aria-label="Landing navigation">
+          <nav className="flex shrink-0 items-center gap-1.5 sm:gap-2" aria-label="Landing">
             {/* Mobile 1-tap Locale Cycle */}
             <button
               type="button"
               onClick={cycleLocale}
               aria-label={t('set.language')}
-              className="inline-flex h-9 items-center justify-center rounded-lg border border-border bg-card px-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-accent sm:hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="inline-flex h-9 shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-border bg-card px-3 text-xs font-semibold text-foreground transition-colors hover:bg-accent sm:hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {LOCALE_SHORT[locale]}
             </button>
 
             {/* Desktop Compact Locale Selector */}
             <div
-              className="hidden items-center rounded-lg border border-border bg-card p-0.5 sm:flex"
+              className="hidden shrink-0 items-center rounded-full border border-border bg-card p-0.5 sm:flex"
               role="group"
               aria-label={t('set.language')}
             >
@@ -228,9 +228,9 @@ export function LandingPage() {
                   onClick={() => setLocale(loc)}
                   aria-pressed={locale === loc}
                   className={cn(
-                    'rounded-md px-2 py-1 text-xs font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                    'rounded-full px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                     locale === loc
-                      ? 'bg-accent text-foreground'
+                      ? 'bg-primary-container text-on-primary-container font-semibold'
                       : 'text-muted-foreground hover:text-foreground',
                   )}
                 >
@@ -244,7 +244,7 @@ export function LandingPage() {
               onClick={toggleTheme}
               aria-label={isDark ? t('set.themeLight') : t('set.themeDark')}
               title={isDark ? t('set.themeLight') : t('set.themeDark')}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {isDark ? (
                 <Sun className="h-4 w-4" aria-hidden="true" />
@@ -255,14 +255,14 @@ export function LandingPage() {
 
             <Link
               to="/login"
-              className="inline-flex h-9 items-center justify-center rounded-lg px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:px-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="inline-flex h-9 shrink-0 items-center justify-center whitespace-nowrap rounded-full px-3.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {t('auth.signIn')}
             </Link>
 
             <Link
               to="/register"
-              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground shadow-sm transition-all duration-150 hover:brightness-105 active:scale-[0.985] sm:px-3.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="hidden min-[480px]:inline-flex h-9 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm transition-all duration-150 hover:brightness-105 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <span>{t('landing.ctaPrimary')}</span>
               <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -315,7 +315,7 @@ export function LandingPage() {
                 >
                   <Link
                     to="/register"
-                    className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition-all duration-150 hover:brightness-105 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition-all duration-150 hover:brightness-105 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     <span>{t('landing.ctaPrimary')}</span>
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -355,7 +355,7 @@ export function LandingPage() {
                 style={{ animationDelay: '220ms' }}
               >
                 {/* Plane 2: Main Ledger Card */}
-                <div className="hero-plane-subject relative rounded-2xl border border-border bg-card/95 p-5 shadow-elevated ring-1 ring-inset ring-white/5 backdrop-blur-sm sm:p-6">
+                <div className="hero-plane-subject relative rounded-3xl border border-border/80 bg-card/95 p-5 shadow-elevated ring-1 ring-inset ring-white/5 backdrop-blur-sm sm:p-6">
                   <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
                     <div>
                       <p className="text-xs font-medium text-muted-foreground">
@@ -395,7 +395,7 @@ export function LandingPage() {
 
                     <div className="flex items-center justify-between gap-3 py-2.5 text-sm">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/12 text-blue-700 dark:text-blue-400">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-tertiary-container text-on-tertiary-container">
                           <Landmark className="h-4 w-4" aria-hidden="true" />
                         </div>
                         <div className="min-w-0">
@@ -752,7 +752,7 @@ export function LandingPage() {
             <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
               <Link
                 to="/register"
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition-all duration-150 hover:brightness-105 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition-all duration-150 hover:brightness-105 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <span>{t('landing.ctaPrimary')}</span>
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />

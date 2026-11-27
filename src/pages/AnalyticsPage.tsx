@@ -149,7 +149,7 @@ export function AnalyticsPage() {
             <CardTitle className="text-xs font-medium text-muted-foreground">
               {t('ana.thisVsNext')}
             </CardTitle>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/12 text-blue-600 dark:text-blue-400">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-tertiary-container text-on-tertiary-container">
               <TrendingUp className="h-4 w-4" aria-hidden="true" />
             </div>
           </CardHeader>
@@ -186,7 +186,7 @@ export function AnalyticsPage() {
             <CardTitle className="text-xs font-medium text-muted-foreground">
               {t('ana.actualVsEstimated')}
             </CardTitle>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/12 text-amber-600 dark:text-amber-400">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary-container text-on-secondary-container">
               <CalendarClock className="h-4 w-4" aria-hidden="true" />
             </div>
           </CardHeader>

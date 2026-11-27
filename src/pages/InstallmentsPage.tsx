@@ -177,7 +177,7 @@ export function InstallmentsPage() {
             <CardTitle className="text-xs font-medium text-muted-foreground">
               {t('inst.outstandingBalance')}
             </CardTitle>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/12 text-blue-600 dark:text-blue-400">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-tertiary-container text-on-tertiary-container">
               <Wallet className="h-4 w-4" aria-hidden="true" />
             </div>
           </CardHeader>
@@ -288,7 +288,7 @@ export function InstallmentsPage() {
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as InstallmentSortOption)}
               aria-label={t('inst.sortNextDue')}
-              className="col-span-2 sm:w-44"
+              className="col-span-2 sm:w-52"
             >
               <option value="next_due_asc">{t('inst.sortNextDue')}</option>
               <option value="outstanding_desc">{t('inst.sortOutstandingDesc')}</option>
@@ -418,7 +418,7 @@ export function InstallmentsPage() {
 
                     <Link
                       to={`/installments/${plan.id}`}
-                      className="inline-flex items-center gap-1 rounded text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary-container/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       {metrics.effectiveStatus === 'completed' ? (
                         <>

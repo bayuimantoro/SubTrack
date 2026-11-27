@@ -250,10 +250,10 @@ export function CalendarPage() {
                       <div
                         key={ev.id}
                         className={cn(
-                          'truncate rounded px-1.5 py-0.5 text-[10px] font-medium',
+                          'truncate rounded-full px-2 py-0.5 text-[10px] font-medium',
                           ev.kind === 'installment'
-                            ? 'bg-blue-500/15 text-blue-700 dark:text-blue-300'
-                            : 'bg-secondary',
+                            ? 'bg-tertiary-container text-on-tertiary-container'
+                            : 'bg-secondary-container text-on-secondary-container',
                         )}
                         title={`${ev.title} — ${formatCurrency(ev.amount, ev.currency)}`}
                       >
@@ -319,7 +319,7 @@ export function CalendarPage() {
                         size="sm"
                       />
                     ) : (
-                      <Badge variant="secondary" className="shrink-0 text-[10px]">
+                      <Badge variant="tertiary" className="shrink-0 text-[10px]">
                         {t('cal.instBadge')}
                       </Badge>
                     )}

@@ -119,10 +119,10 @@ export function AppShell() {
               end={to === '/'}
               className={({ isActive }) =>
                 cn(
-                  'group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  'group flex items-center justify-between rounded-full px-3.5 py-2.5 text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                   isActive
-                    ? 'bg-card text-foreground shadow-card ring-1 ring-border/80'
-                    : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
+                    ? 'bg-primary-container text-on-primary-container font-semibold'
+                    : 'text-muted-foreground hover:bg-accent/70 hover:text-foreground',
                 )
               }
             >
@@ -133,7 +133,7 @@ export function AppShell() {
                       className={cn(
                         'h-4 w-4 transition-colors',
                         isActive
-                          ? 'text-primary'
+                          ? 'text-on-primary-container'
                           : 'text-muted-foreground group-hover:text-foreground',
                       )}
                       aria-hidden="true"
@@ -141,7 +141,7 @@ export function AppShell() {
                     {t(labelKey)}
                   </span>
                   {to === '/notifications' && alertCount > 0 && (
-                    <span className="rounded-full bg-primary-container px-2 py-0.5 text-[11px] font-semibold text-on-primary-container tabular-nums">
+                    <span className="rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground tabular-nums">
                       {alertCount}
                     </span>
                   )}
@@ -227,10 +227,10 @@ export function AppShell() {
                   onClick={() => setMobileOpen(false)}
                   className={({ isActive }) =>
                     cn(
-                      'flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      'flex items-center justify-between rounded-full px-3.5 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                       isActive
-                        ? 'bg-accent text-foreground'
-                        : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
+                        ? 'bg-primary-container text-on-primary-container font-semibold'
+                        : 'text-muted-foreground hover:bg-accent/70 hover:text-foreground',
                     )
                   }
                 >
@@ -263,7 +263,7 @@ export function AppShell() {
             >
               <Menu className="h-4 w-4" aria-hidden="true" />
             </button>
-            <h1 className="text-base font-semibold tracking-tight sm:text-lg">{pageTitle}</h1>
+            <h1 className="font-display text-xl font-bold tracking-tight sm:text-2xl">{pageTitle}</h1>
           </div>
 
           {isInstallmentsRoute && (

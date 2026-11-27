@@ -65,6 +65,10 @@ export function ServiceIcon({
         <img
           src={`https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=64`}
           alt={`${name} logo`}
+          width={20}
+          height={20}
+          loading="lazy"
+          decoding="async"
           className="h-5 w-5 object-contain"
           onError={() => setImgFailed(true)}
         />

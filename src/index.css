@@ -147,28 +147,23 @@
 /* Scroll-craft layered hero transforms driven by --hero-p (0..1) */
 .hero-plane-bg {
   transform: translate3d(0, calc(var(--hero-p, 0) * -24px), 0) scale(calc(1 + var(--hero-p, 0) * 0.04));
-  will-change: transform;
 }
 
 .hero-plane-copy {
   transform: translate3d(0, calc(var(--hero-p, 0) * -14px), 0);
   opacity: calc(1 - var(--hero-p, 0) * 0.1);
-  will-change: transform, opacity;
 }
 
 .hero-plane-subject {
   transform: translate3d(0, calc(var(--hero-p, 0) * -28px), 0) scale(calc(1 - var(--hero-p, 0) * 0.02));
-  will-change: transform;
 }
 
 .hero-plane-float-a {
   transform: translate3d(0, calc(var(--hero-p, 0) * -36px), 0);
-  will-change: transform;
 }
 
 .hero-plane-float-b {
   transform: translate3d(0, calc(var(--hero-p, 0) * -44px), 0);
-  will-change: transform;
 }
 
 @media (min-width: 768px) {
@@ -240,7 +235,6 @@
 .scroll-progress-bar {
   transform: scaleX(var(--page-p, 0));
   transform-origin: left center;
-  will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -260,7 +254,6 @@
   .hero-plane-float-b {
     transform: none !important;
     opacity: 1 !important;
-    will-change: auto;
   }
 
   .reveal-block {

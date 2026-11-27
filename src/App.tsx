@@ -1,17 +1,27 @@
 import * as React from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { Toaster } from 'sonner'
-import { AppShell } from '@/components/layout/AppShell'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AuthProvider, useAuth } from '@/hooks/useAuth'
 import { I18nProvider } from '@/hooks/useI18n'
 import { SubTrackProvider, useSubTrack } from '@/hooks/useSubTrack'
-import { AuthPage } from '@/pages/AuthPage'
-import { DashboardPage } from '@/pages/DashboardPage'
 import { LandingPage } from '@/pages/LandingPage'
-import { SubscriptionDetailPage } from '@/pages/SubscriptionDetailPage'
-import { SubscriptionsPage } from '@/pages/SubscriptionsPage'
 
+const AppShell = React.lazy(() =>
+  import('@/components/layout/AppShell').then((m) => ({ default: m.AppShell })),
+)
+const AuthPage = React.lazy(() =>
+  import('@/pages/AuthPage').then((m) => ({ default: m.AuthPage })),
+)
+const DashboardPage = React.lazy(() =>
+  import('@/pages/DashboardPage').then((m) => ({ default: m.DashboardPage })),
+)
+const SubscriptionsPage = React.lazy(() =>
+  import('@/pages/SubscriptionsPage').then((m) => ({ default: m.SubscriptionsPage })),
+)
+const SubscriptionDetailPage = React.lazy(() =>
+  import('@/pages/SubscriptionDetailPage').then((m) => ({ default: m.SubscriptionDetailPage })),
+)
 const CalendarPage = React.lazy(() =>
   import('@/pages/CalendarPage').then((m) => ({ default: m.CalendarPage })),
 )
@@ -65,18 +75,24 @@ function AppRoutes() {
   }
 
   if (isPasswordRecovery || (status === 'unauthenticated' && pathname === '/reset-password')) {
-    return <AuthPage initialView="reset-password" />
+    return (
+      <React.Suspense fallback={<AuthInitializingScreen />}>
+        <AuthPage initialView="reset-password" />
+      </React.Suspense>
+    )
   }
 
   if (status === 'unauthenticated') {
     return (
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<AuthPage initialView="login" />} />
-        <Route path="/register" element={<AuthPage initialView="register" />} />
-        <Route path="/forgot-password" element={<AuthPage initialView="forgot-password" />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <React.Suspense fallback={<AuthInitializingScreen />}>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<AuthPage initialView="login" />} />
+          <Route path="/register" element={<AuthPage initialView="register" />} />
+          <Route path="/forgot-password" element={<AuthPage initialView="forgot-password" />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </React.Suspense>
     )
   }
 

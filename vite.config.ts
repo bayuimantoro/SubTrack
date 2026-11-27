@@ -10,4 +10,20 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            { name: 'recharts', test: /node_modules[\\/](recharts|d3-|victory-vendor)/ },
+            { name: 'supabase', test: /node_modules[\\/]@supabase/ },
+            {
+              name: 'react-vendor',
+              test: /node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)/,
+            },
+          ],
+        },
+      },
+    },
+  },
 })

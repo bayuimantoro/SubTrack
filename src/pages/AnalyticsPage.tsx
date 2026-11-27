@@ -130,7 +130,7 @@ export function AnalyticsPage() {
             <CardTitle className="text-xs font-medium text-muted-foreground">
               {t('ana.normalizedMonthly')}
             </CardTitle>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/12 text-emerald-600 dark:text-emerald-400">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-container text-on-primary-container">
               <Wallet className="h-4 w-4" aria-hidden="true" />
             </div>
           </CardHeader>
@@ -161,7 +161,7 @@ export function AnalyticsPage() {
                   momDiff > 0
                     ? 'bg-amber-500/12 text-amber-700 dark:text-amber-400'
                     : momDiff < 0
-                      ? 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-400'
+                      ? 'bg-primary-container text-on-primary-container'
                       : 'bg-muted text-muted-foreground'
                 }`}
               >
@@ -235,8 +235,8 @@ export function AnalyticsPage() {
                 <Area
                   type="monotone"
                   dataKey="amount"
-                  stroke="#10b981"
-                  fill="#10b981"
+                  stroke="var(--chart-primary)"
+                  fill="var(--chart-primary)"
                   fillOpacity={0.15}
                   strokeWidth={2}
                 />

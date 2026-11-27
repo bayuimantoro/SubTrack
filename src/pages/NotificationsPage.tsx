@@ -108,7 +108,7 @@ export function NotificationsPage() {
             </div>
             <input
               type="checkbox"
-              className="h-4 w-4 accent-emerald-500"
+              className="h-4 w-4 accent-primary"
               checked={draft.inAppAlertsEnabled}
               onChange={(e) =>
                 setDraft((p) => ({ ...p, inAppAlertsEnabled: e.target.checked }))
@@ -128,7 +128,7 @@ export function NotificationsPage() {
                 </div>
                 <input
                   type="checkbox"
-                  className="h-4 w-4 accent-emerald-500"
+                  className="h-4 w-4 accent-primary"
                   checked={draft[item.key]}
                   disabled={!draft.inAppAlertsEnabled}
                   onChange={(e) =>
@@ -160,7 +160,7 @@ export function NotificationsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2.5">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/12 text-emerald-600 dark:text-emerald-400">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-container text-on-primary-container">
               <Bell className="h-3.5 w-3.5" aria-hidden="true" />
             </span>
             {t('notif.activeAlerts')}

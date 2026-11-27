@@ -6,6 +6,7 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-display: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
 
+  /* Material 3 Expressive — Matcha Green Semantic Color Mapping */
   --color-background: var(--bg-canvas);
   --color-foreground: var(--text-primary);
   --color-sidebar: var(--bg-sidebar);
@@ -13,10 +14,22 @@
   --color-card-foreground: var(--text-primary);
   --color-popover: var(--bg-elevated);
   --color-popover-foreground: var(--text-primary);
-  --color-primary: var(--accent-primary);
-  --color-primary-foreground: var(--accent-primary-fg);
+
+  --color-primary: var(--md-primary);
+  --color-primary-foreground: var(--md-on-primary);
+  --color-primary-container: var(--md-primary-container);
+  --color-on-primary-container: var(--md-on-primary-container);
+
   --color-secondary: var(--bg-elevated);
   --color-secondary-foreground: var(--text-primary);
+  --color-secondary-brand: var(--md-secondary);
+  --color-secondary-container: var(--md-secondary-container);
+  --color-on-secondary-container: var(--md-on-secondary-container);
+
+  --color-tertiary: var(--md-tertiary);
+  --color-tertiary-container: var(--md-tertiary-container);
+  --color-on-tertiary-container: var(--md-on-tertiary-container);
+
   --color-muted: var(--bg-elevated);
   --color-muted-foreground: var(--text-secondary);
   --color-accent: var(--bg-hover);
@@ -26,43 +39,95 @@
   --color-border: var(--border-subtle);
   --color-border-strong: var(--border-strong);
   --color-input: var(--border-subtle);
-  --color-ring: var(--accent-primary);
+  --color-ring: var(--md-primary);
 }
 
 :root {
-  --bg-canvas: #f6f8fa;
-  --bg-sidebar: #f0f3f7;
-  --bg-surface: #ffffff;
-  --bg-elevated: #f1f5f9;
-  --bg-hover: #e5eaf0;
-  --border-subtle: #e2e8f0;
-  --border-strong: #cbd5e1;
-  --text-primary: #09090b;
-  --text-secondary: #52525b;
-  --text-muted: #71717a;
-  --accent-primary: #059669;
-  --accent-primary-fg: #ffffff;
-  --accent-danger: #dc2626;
-  --shadow-card: 0 1px 2px rgba(9, 9, 11, 0.04), 0 4px 12px -4px rgba(9, 9, 11, 0.06);
-  --shadow-elevated: 0 12px 32px -12px rgba(9, 9, 11, 0.14), 0 2px 6px rgba(9, 9, 11, 0.05);
+  /* Light Theme — Warm Off-White with Subtle Matcha Tonal Influence */
+  --md-primary: #557a46;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #ddebcf;
+  --md-on-primary-container: #1a3114;
+
+  --md-secondary: #688656;
+  --md-on-secondary: #ffffff;
+  --md-secondary-container: #e5eedf;
+  --md-on-secondary-container: #21331a;
+
+  --md-tertiary: #758859;
+  --md-on-tertiary: #ffffff;
+  --md-tertiary-container: #eaefd9;
+  --md-on-tertiary-container: #273218;
+
+  /* Tonal Surfaces */
+  --bg-canvas: #f4f6ef;
+  --bg-sidebar: #ecf0e5;
+  --bg-surface: #fcfdfa;
+  --bg-elevated: #e6ece0;
+  --bg-hover: #dce4d4;
+  --border-subtle: #d2dbc8;
+  --border-strong: #aeb9a3;
+
+  /* Ink / Text */
+  --text-primary: #182016;
+  --text-secondary: #4b5846;
+  --text-muted: #5f6d59;
+
+  /* Semantic Status & Legacy Alias */
+  --accent-primary: var(--md-primary);
+  --accent-primary-fg: var(--md-on-primary);
+  --accent-danger: #c62828;
+  --status-success: #2e7d4f;
+  --status-warning: #b45309;
+  --status-info: #1d6396;
+  --chart-primary: #557a46;
+
+  --shadow-card: 0 1px 2px rgba(24, 32, 22, 0.05), 0 4px 12px -4px rgba(24, 32, 22, 0.07);
+  --shadow-elevated: 0 12px 32px -12px rgba(24, 32, 22, 0.14), 0 2px 6px rgba(24, 32, 22, 0.05);
 }
 
 .dark {
-  --bg-canvas: #09090c;
-  --bg-sidebar: #0d0d11;
-  --bg-surface: #121217;
-  --bg-elevated: #191920;
-  --bg-hover: #25252e;
-  --border-subtle: #24242d;
-  --border-strong: #32323e;
-  --text-primary: #fafafa;
-  --text-secondary: #a1a1aa;
-  --text-muted: #8b8b96;
-  --accent-primary: #10b981;
-  --accent-primary-fg: #022c22;
-  --accent-danger: #ef4444;
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 18px -8px rgba(0, 0, 0, 0.45);
-  --shadow-elevated: 0 20px 44px -16px rgba(0, 0, 0, 0.72), 0 4px 12px rgba(0, 0, 0, 0.35);
+  /* Dark Theme — Deep Forest Green with Balanced Undertones */
+  --md-primary: #b6d49d;
+  --md-on-primary: #1b2f16;
+  --md-primary-container: #324d29;
+  --md-on-primary-container: #ddebcf;
+
+  --md-secondary: #9db987;
+  --md-on-secondary: #1a2b15;
+  --md-secondary-container: #2b3e25;
+  --md-on-secondary-container: #d8e7cb;
+
+  --md-tertiary: #bdd09e;
+  --md-on-tertiary: #253216;
+  --md-tertiary-container: #374427;
+  --md-on-tertiary-container: #e4f0cf;
+
+  /* Tonal Surfaces */
+  --bg-canvas: #111911;
+  --bg-sidebar: #141d14;
+  --bg-surface: #172117;
+  --bg-elevated: #1f2b1f;
+  --bg-hover: #283728;
+  --border-subtle: #2a392a;
+  --border-strong: #3d503c;
+
+  /* Ink / Text */
+  --text-primary: #eef3e8;
+  --text-secondary: #b2bfa9;
+  --text-muted: #8e9d86;
+
+  /* Semantic Status & Legacy Alias */
+  --accent-primary: var(--md-primary);
+  --accent-primary-fg: var(--md-on-primary);
+  --accent-danger: #ef5350;
+  --status-success: #6ee7a8;
+  --status-warning: #fbbf24;
+  --status-info: #7dd3fc;
+  --chart-primary: #9bc47f;
+
+  --shadow-card: 0 1px 2px rgba(5, 10, 5, 0.4), 0 6px 18px -8px rgba(5, 10, 5, 0.55);
+  --shadow-elevated: 0 20px 44px -16px rgba(5, 10, 5, 0.78), 0 4px 12px rgba(5, 10, 5, 0.42);
 }
 
 @layer base {
@@ -73,13 +138,14 @@
   html {
     scroll-behavior: smooth;
     color-scheme: light dark;
+    accent-color: var(--md-primary);
   }
 
   body {
     font-family: var(--font-sans);
     background-color: var(--bg-canvas);
     color: var(--text-primary);
-    caret-color: var(--accent-primary);
+    caret-color: var(--md-primary);
     text-rendering: optimizeLegibility;
   }
 
@@ -139,8 +205,8 @@
 /* Landing architectural grid background */
 .bg-grid-fintech {
   background-image:
-    linear-gradient(to right, color-mix(in oklab, var(--border-subtle) 55%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in oklab, var(--border-subtle) 55%, transparent) 1px, transparent 1px);
+    linear-gradient(to right, color-mix(in oklab, var(--border-subtle) 60%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--border-subtle) 60%, transparent) 1px, transparent 1px);
   background-size: 48px 48px;
 }
 

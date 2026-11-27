@@ -44,7 +44,7 @@ import {
 } from '@/lib/installment-engine'
 import { convertCurrency, formatCompactCurrency, formatCurrency } from '@/lib/currency'
 
-const CHART_COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4']
+const CHART_COLORS = ['#658c52', '#3b82a6', '#c98a3a', '#8d6cab', '#c4636b', '#4b9b8e']
 
 const TOOLTIP_STYLE = {
   backgroundColor: 'var(--bg-elevated)',
@@ -191,7 +191,7 @@ export function DashboardPage() {
             <CardTitle className="text-xs font-medium text-muted-foreground">
               {t('dash.activeSubs')}
             </CardTitle>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/12 text-emerald-600 dark:text-emerald-400">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-container text-on-primary-container">
               <CreditCard className="h-4 w-4" aria-hidden="true" />
             </div>
           </CardHeader>
@@ -213,7 +213,7 @@ export function DashboardPage() {
             <CardTitle className="text-xs font-medium text-muted-foreground">
               {t('dash.monthlyRecurring')}
             </CardTitle>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/12 text-emerald-600 dark:text-emerald-400">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary-container text-on-secondary-container">
               <Wallet className="h-4 w-4" aria-hidden="true" />
             </div>
           </CardHeader>
@@ -274,14 +274,14 @@ export function DashboardPage() {
           </div>
           <Link
             to="/installments"
-            className="inline-flex items-center gap-1 rounded text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center gap-1 rounded text-xs font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {t('nav.installments')} <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         </CardHeader>
         <CardContent className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.06] p-4">
-            <div className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
+          <div className="rounded-xl border border-primary/25 bg-primary-container/50 p-4">
+            <div className="text-xs font-medium text-on-primary-container">
               {t('dash.combinedMonthly')}
             </div>
             <div className="mt-1.5 font-display text-xl font-bold tracking-tight tabular-nums">
@@ -359,7 +359,7 @@ export function DashboardPage() {
                       t('chart.projected'),
                     ]}
                   />
-                  <Bar dataKey="amount" fill="#10b981" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="amount" fill="var(--chart-primary)" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -435,7 +435,7 @@ export function DashboardPage() {
             </div>
             <Link
               to="/calendar"
-              className="inline-flex items-center gap-1 rounded text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="inline-flex items-center gap-1 rounded text-xs font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {t('nav.calendar')} <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
@@ -496,7 +496,7 @@ export function DashboardPage() {
             </div>
             <Link
               to="/subscriptions"
-              className="inline-flex items-center gap-1 rounded text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="inline-flex items-center gap-1 rounded text-xs font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {t('dash.viewAll')} <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>

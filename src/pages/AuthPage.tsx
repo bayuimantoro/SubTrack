@@ -190,7 +190,7 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-24 h-72 w-full max-w-lg rounded-full bg-emerald-500/10 blur-3xl"
+        className="pointer-events-none absolute -top-24 h-72 w-full max-w-lg rounded-full bg-primary/12 blur-3xl"
       />
 
       <div className="relative z-10 w-full max-w-md space-y-6">
@@ -256,7 +256,7 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
                       <button
                         type="button"
                         onClick={() => switchView('forgot-password')}
-                        className="text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
+                        className="text-xs font-medium text-primary hover:underline cursor-pointer"
                       >
                         {t('auth.forgotPassword')}
                       </button>
@@ -297,7 +297,7 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
                   <button
                     type="button"
                     onClick={() => switchView('register')}
-                    className="font-medium text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
+                    className="font-medium text-primary hover:underline cursor-pointer"
                   >
                     {t('auth.createAccountLink')}
                   </button>
@@ -418,7 +418,7 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
                   <button
                     type="button"
                     onClick={() => switchView('login')}
-                    className="font-medium text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
+                    className="font-medium text-primary hover:underline cursor-pointer"
                   >
                     {t('auth.signIn')}
                   </button>
@@ -430,7 +430,7 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
           {view === 'verify-email' && (
             <>
               <CardHeader className="text-center">
-                <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-emerald-700 dark:text-emerald-400">
+                <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary-container text-on-primary-container">
                   <MailCheck className="h-5 w-5" aria-hidden="true" />
                 </div>
                 <CardTitle className="text-base">{t('auth.verifyTitle')}</CardTitle>
@@ -446,7 +446,7 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
                   </div>
                 )}
                 {infoMessage && (
-                  <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-400">
+                  <div className="rounded-lg border border-primary/30 bg-primary-container/70 px-3 py-2 text-xs text-on-primary-container">
                     {infoMessage}
                   </div>
                 )}
@@ -488,7 +488,7 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
                   </div>
                 )}
                 {infoMessage && (
-                  <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-400">
+                  <div className="rounded-lg border border-primary/30 bg-primary-container/70 px-3 py-2 text-xs text-on-primary-container">
                     {infoMessage}
                   </div>
                 )}
@@ -547,7 +547,7 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
                   </div>
                 )}
                 {infoMessage && (
-                  <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-400">
+                  <div className="rounded-lg border border-primary/30 bg-primary-container/70 px-3 py-2 text-xs text-on-primary-container">
                     {infoMessage}
                   </div>
                 )}

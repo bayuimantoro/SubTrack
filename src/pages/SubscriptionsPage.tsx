@@ -283,7 +283,7 @@ export function SubscriptionsPage() {
                     <td className="px-4 py-3">
                       <Link
                         to={`/subscriptions/${sub.id}`}
-                        className="flex items-center gap-2.5 font-medium hover:text-emerald-700 dark:hover:text-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                        className="flex items-center gap-2.5 font-medium hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
                       >
                         <ServiceIcon
                           name={sub.serviceName}
@@ -379,7 +379,7 @@ export function SubscriptionsPage() {
           {filtered.map((sub) => (
             <Card
               key={sub.id}
-              className="card-interactive flex flex-col justify-between focus-within:border-emerald-500/40"
+              className="card-interactive flex flex-col justify-between focus-within:border-primary/50"
             >
               <CardContent className="p-5 space-y-4">
                 <div className="flex items-start justify-between gap-3">
@@ -393,7 +393,7 @@ export function SubscriptionsPage() {
                       websiteUrl={sub.websiteUrl}
                     />
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-semibold group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
+                      <div className="truncate text-sm font-semibold group-hover:text-primary transition-colors">
                         {sub.serviceName}
                       </div>
                       <div className="text-xs text-muted-foreground">{sub.category}</div>
@@ -499,7 +499,7 @@ export function SubscriptionsPage() {
                     )}
                     <Link
                       to={`/subscriptions/${sub.id}`}
-                      className="rounded text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="rounded text-xs font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       {t('common.details')}
                     </Link>

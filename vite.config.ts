@@ -14,12 +14,22 @@ export default defineConfig({
     rolldownOptions: {
       output: {
         codeSplitting: {
+          includeDependenciesRecursively: false,
           groups: [
-            { name: 'recharts', test: /node_modules[\\/](recharts|d3-|victory-vendor)/ },
-            { name: 'supabase', test: /node_modules[\\/]@supabase/ },
             {
               name: 'react-vendor',
-              test: /node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)/,
+              test: /node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/,
+              priority: 30,
+            },
+            {
+              name: 'supabase',
+              test: /node_modules[\\/]@supabase[\\/]/,
+              priority: 20,
+            },
+            {
+              name: 'recharts',
+              test: /node_modules[\\/](recharts|d3-[^\\/]+|victory-vendor)[\\/]/,
+              priority: 10,
             },
           ],
         },

@@ -213,7 +213,7 @@ export function SubscriptionDetailPage() {
                 : undefined
             }
           >
-            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+            <CheckCircle2 className="h-4 w-4 text-primary" />
             {recording
               ? t('subs.recording')
               : currentCyclePaid
@@ -312,13 +312,13 @@ export function SubscriptionDetailPage() {
             <div>
               <div className="text-xs text-muted-foreground">{t('subs.nextPaymentDate')}</div>
               <div className="mt-1 flex items-center gap-1.5 font-medium tabular-nums">
-                <Calendar className="h-4 w-4 text-emerald-400" />
+                <Calendar className="h-4 w-4 text-primary" />
                 {sub.status === 'cancelled'
                   ? t('common.status.cancelled')
                   : formatDate(nextUnpaidDate)}
               </div>
               {sub.status !== 'cancelled' && isCycleClosed && (
-                <div className="mt-0.5 text-[11px] text-emerald-700 dark:text-emerald-400">
+                <div className="mt-0.5 text-[11px] text-primary">
                   {currentCyclePaid ? t('subs.cycleAlreadyPaid') : t('subs.cycleSkipped')} ·{' '}
                   {t('subs.nextUnpaidCycle', { date: formatDate(nextUnpaidDate) })}
                 </div>
@@ -343,7 +343,7 @@ export function SubscriptionDetailPage() {
                     href={sanitizeHttpUrl(sub.websiteUrl)!}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded font-medium text-emerald-700 dark:text-emerald-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="inline-flex items-center gap-1 rounded font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     {sub.websiteUrl}
                     <ExternalLink className="h-3.5 w-3.5" />

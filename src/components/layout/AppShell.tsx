@@ -133,7 +133,7 @@ export function AppShell() {
                       className={cn(
                         'h-4 w-4 transition-colors',
                         isActive
-                          ? 'text-emerald-600 dark:text-emerald-400'
+                          ? 'text-primary'
                           : 'text-muted-foreground group-hover:text-foreground',
                       )}
                       aria-hidden="true"
@@ -141,7 +141,7 @@ export function AppShell() {
                     {t(labelKey)}
                   </span>
                   {to === '/notifications' && alertCount > 0 && (
-                    <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 tabular-nums">
+                    <span className="rounded-full bg-primary-container px-2 py-0.5 text-[11px] font-semibold text-on-primary-container tabular-nums">
                       {alertCount}
                     </span>
                   )}
@@ -154,8 +154,8 @@ export function AppShell() {
         <div className="border-t border-border p-4 space-y-2">
           <div className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-xs shadow-sm">
             <span className="text-muted-foreground">{t('storage.label')}</span>
-            <span className="inline-flex items-center gap-1.5 font-medium text-emerald-700 dark:text-emerald-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+            <span className="inline-flex items-center gap-1.5 font-medium text-primary">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />
               {mode === 'supabase' ? t('storage.cloud') : t('storage.local')}
             </span>
           </div>
@@ -239,7 +239,7 @@ export function AppShell() {
                     {t(labelKey)}
                   </span>
                   {to === '/notifications' && alertCount > 0 && (
-                    <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
+                    <span className="rounded-full bg-primary-container px-2 py-0.5 text-[11px] font-semibold text-on-primary-container">
                       {alertCount}
                     </span>
                   )}

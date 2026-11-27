@@ -189,7 +189,7 @@ export function LandingPage() {
   return (
     <div
       ref={pageRef}
-      className="min-h-screen bg-background text-foreground selection:bg-emerald-500/20 selection:text-emerald-700 dark:selection:text-emerald-200"
+      className="min-h-screen bg-background text-foreground selection:bg-primary-container selection:text-on-primary-container"
     >
       {/* Top Navigation */}
       <header className="sticky top-0 z-40 border-b border-border/80 bg-background/85 backdrop-blur-md">
@@ -289,7 +289,7 @@ export function LandingPage() {
           />
           <div
             aria-hidden="true"
-            className="hero-plane-bg pointer-events-none absolute inset-x-0 -top-24 mx-auto h-[420px] max-w-4xl rounded-full bg-emerald-500/10 blur-3xl dark:bg-emerald-500/12"
+            className="hero-plane-bg pointer-events-none absolute inset-x-0 -top-24 mx-auto h-[420px] max-w-4xl rounded-full bg-primary/12 blur-3xl"
           />
 
           <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-12 sm:px-6 sm:pb-24 sm:pt-20 lg:px-8 lg:pt-24">
@@ -328,22 +328,22 @@ export function LandingPage() {
                     className="h-11 bg-card/80 px-5"
                     onClick={enterLocalMode}
                   >
-                    <HardDrive className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                    <HardDrive className="h-4 w-4 text-primary" aria-hidden="true" />
                     <span>{t('landing.ctaLocal')}</span>
                   </Button>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-2 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1.5">
-                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                    <ShieldCheck className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
                     {t('landing.trustPrivate')}
                   </span>
                   <span className="inline-flex items-center gap-1.5">
-                    <Globe className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                    <Globe className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
                     {t('landing.trustMultiCurrency')}
                   </span>
                   <span className="inline-flex items-center gap-1.5">
-                    <HardDrive className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                    <HardDrive className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
                     {t('landing.trustLocalReady')}
                   </span>
                 </div>
@@ -365,10 +365,10 @@ export function LandingPage() {
                         {formatCurrency(1_414_000, 'IDR')}
                       </p>
                     </div>
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/12 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-container px-2.5 py-1 text-xs font-medium text-on-primary-container">
                       <span className="relative flex h-2 w-2" aria-hidden="true">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-                        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
                       </span>
                       {t('landing.previewStatusOk')}
                     </span>
@@ -378,7 +378,7 @@ export function LandingPage() {
                   <div className="mt-4 divide-y divide-border/80">
                     <div className="flex items-center justify-between gap-3 py-2.5 text-sm">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/12 text-emerald-700 dark:text-emerald-400">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-container text-on-primary-container">
                           <CreditCard className="h-4 w-4" aria-hidden="true" />
                         </div>
                         <div className="min-w-0">
@@ -462,11 +462,11 @@ export function LandingPage() {
                     <div className="animate-float-gentle-delayed flex items-center justify-between gap-2 rounded-xl border border-border bg-popover/95 px-3 py-2.5 text-xs shadow-elevated backdrop-blur-md sm:gap-3 sm:px-3.5">
                       <div className="min-w-0">
                         <p className="truncate text-[11px] text-muted-foreground">{t('landing.floatAnnualLabel')}</p>
-                        <p className="truncate font-display text-sm font-bold tabular-nums text-emerald-700 dark:text-emerald-400">
+                        <p className="truncate font-display text-sm font-bold tabular-nums text-primary">
                           {formatCurrency(16_968_000, 'IDR')}
                         </p>
                       </div>
-                      <Check className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                      <Check className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
                     </div>
                   </div>
                 </div>
@@ -650,15 +650,15 @@ export function LandingPage() {
                 </p>
                 <ul className="space-y-2.5 pt-1 text-sm text-foreground">
                   <li className="flex items-start gap-2.5">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
                     <span>{t('landing.bandInstPoint1')}</span>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
                     <span>{t('landing.bandInstPoint2')}</span>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
                     <span>{t('landing.bandInstPoint3')}</span>
                   </li>
                 </ul>
@@ -701,14 +701,14 @@ export function LandingPage() {
               <div className="order-2 rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6 lg:order-1 lg:col-span-7">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="rounded-xl border border-border/80 bg-background/60 p-4">
-                    <CalendarDays className="h-5 w-5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                    <CalendarDays className="h-5 w-5 text-primary" aria-hidden="true" />
                     <p className="mt-3 text-sm font-semibold">{t('landing.bandControlCard1Title')}</p>
                     <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                       {t('landing.bandControlCard1Desc')}
                     </p>
                   </div>
                   <div className="rounded-xl border border-border/80 bg-background/60 p-4">
-                    <Globe className="h-5 w-5 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+                    <Globe className="h-5 w-5 text-secondary-brand" aria-hidden="true" />
                     <p className="mt-3 text-sm font-semibold">{t('landing.bandControlCard2Title')}</p>
                     <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                       {t('landing.bandControlCard2Desc')}
@@ -716,7 +716,7 @@ export function LandingPage() {
                   </div>
                   <div className="rounded-xl border border-border/80 bg-background/60 p-4 sm:col-span-2">
                     <div className="flex items-start gap-3">
-                      <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                      <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
                       <div>
                         <p className="text-sm font-semibold">{t('landing.bandControlCard3Title')}</p>
                         <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
@@ -764,7 +764,7 @@ export function LandingPage() {
                 className="h-11 bg-card px-5"
                 onClick={enterLocalMode}
               >
-                <HardDrive className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                <HardDrive className="h-4 w-4 text-primary" aria-hidden="true" />
                 <span>{t('landing.ctaLocal')}</span>
               </Button>
             </div>

@@ -160,7 +160,7 @@ export function InstallmentsPage() {
             <CardTitle className="text-xs font-medium text-muted-foreground">
               {t('inst.monthlyObligations')}
             </CardTitle>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/12 text-emerald-600 dark:text-emerald-400">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-container text-on-primary-container">
               <CalendarClock className="h-4 w-4" aria-hidden="true" />
             </div>
           </CardHeader>
@@ -196,7 +196,7 @@ export function InstallmentsPage() {
             <CardTitle className="text-xs font-medium text-muted-foreground">
               {t('inst.activePlans')}
             </CardTitle>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/12 text-emerald-600 dark:text-emerald-400">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary-container text-on-secondary-container">
               <Landmark className="h-4 w-4" aria-hidden="true" />
             </div>
           </CardHeader>
@@ -337,7 +337,7 @@ export function InstallmentsPage() {
                       to={`/installments/${plan.id}`}
                       className="min-w-0 group rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      <div className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                      <div className="text-xs font-medium text-primary">
                         {plan.providerName} · {t(`provider.${plan.providerType}`)}
                       </div>
                       <div className="mt-0.5 truncate text-sm font-semibold group-hover:underline">

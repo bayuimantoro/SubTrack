@@ -149,7 +149,7 @@ export function SettingsPage() {
       <form onSubmit={handleSave} className="space-y-6">
         <Card>
           <CardHeader className="flex flex-row items-start gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/12 text-emerald-600 dark:text-emerald-400">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-container text-on-primary-container">
               <Coins className="h-4 w-4" aria-hidden="true" />
             </div>
             <div className="space-y-1">
@@ -189,7 +189,7 @@ export function SettingsPage() {
               </div>
               <input
                 type="checkbox"
-                className="h-4 w-4 accent-emerald-500"
+                className="h-4 w-4 accent-primary"
                 checked={draft.includePausedInEstimates}
                 onChange={(e) =>
                   setDraft((d) => ({
@@ -234,7 +234,7 @@ export function SettingsPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-start gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/12 text-emerald-600 dark:text-emerald-400">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-container text-on-primary-container">
               <ShieldCheck className="h-4 w-4" aria-hidden="true" />
             </div>
             <div className="space-y-1">
@@ -427,7 +427,7 @@ export function SettingsPage() {
                   <span className="text-xs font-medium">{t('set.importIncludeSettings')}</span>
                   <input
                     type="checkbox"
-                    className="h-4 w-4 accent-emerald-500"
+                    className="h-4 w-4 accent-primary"
                     checked={includeImportSettings}
                     onChange={(e) => setIncludeImportSettings(e.target.checked)}
                     disabled={importing}

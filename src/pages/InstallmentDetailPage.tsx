@@ -112,7 +112,7 @@ export function InstallmentDetailPage() {
                     setPayDialogOpen(true)
                   }}
                 >
-                  <ShieldCheck className="h-4 w-4 text-emerald-400" aria-hidden="true" />
+                  <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
                   {t('inst.earlySettlement')}
                 </Button>
                 <Button
@@ -141,7 +141,7 @@ export function InstallmentDetailPage() {
         <CardContent className="grid gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4">
           <div className="sm:col-span-2">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
+              <span className="text-xs font-medium text-primary">
                 {plan.providerName} · {t(`provider.${plan.providerType}`)}
               </span>
               <Badge
@@ -305,7 +305,7 @@ export function InstallmentDetailPage() {
                             setPayDialogOpen(true)
                           }}
                         >
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
+                          <CheckCircle2 className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
                           {t('inst.payBtn')}
                         </Button>
                       ) : (

@@ -217,9 +217,9 @@ export function CalendarPage() {
                   className={cn(
                     'flex min-h-11 sm:min-h-20 flex-col justify-between rounded-lg border p-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer',
                     dayEvents.length > 0
-                      ? 'border-emerald-500/35 bg-emerald-500/5 hover:bg-emerald-500/10'
+                      ? 'border-primary/35 bg-primary-container/35 hover:bg-primary-container/55'
                       : 'border-border bg-background/60 hover:bg-accent/40',
-                    isToday && 'ring-1 ring-emerald-500',
+                    isToday && 'ring-1 ring-primary',
                     isSelected && 'ring-2 ring-primary bg-accent/60',
                   )}
                 >
@@ -228,19 +228,19 @@ export function CalendarPage() {
                       className={cn(
                         'text-xs font-medium tabular-nums',
                         isToday
-                          ? 'font-bold text-emerald-700 dark:text-emerald-400'
+                          ? 'font-bold text-primary'
                           : 'text-muted-foreground',
                       )}
                     >
                       {day}
                     </span>
                     {dayEvents.length > 0 && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />
                     )}
                   </div>
 
                   {dayEvents.length > 0 && (
-                    <span className="mt-1 inline-flex w-fit rounded bg-primary/15 px-1 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 sm:hidden tabular-nums">
+                    <span className="mt-1 inline-flex w-fit rounded bg-primary-container px-1 text-[10px] font-semibold text-on-primary-container sm:hidden tabular-nums">
                       {dayEvents.length}
                     </span>
                   )}

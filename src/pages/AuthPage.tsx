@@ -197,7 +197,7 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
         <div className="flex flex-col items-center text-center">
           <Link
             to="/"
-            className="mb-4 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="mb-4 inline-flex min-h-8 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
             {t('auth.backToHome')}
@@ -256,7 +256,7 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
                       <button
                         type="button"
                         onClick={() => switchView('forgot-password')}
-                        className="text-xs font-medium text-primary hover:underline cursor-pointer"
+                        className="inline-flex min-h-8 items-center rounded-full px-2.5 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary-container/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring cursor-pointer"
                       >
                         {t('auth.forgotPassword')}
                       </button>
@@ -267,7 +267,7 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
                         type={showPassword ? 'text' : 'password'}
                         autoComplete="current-password"
                         placeholder="••••••••"
-                        className="pr-9"
+                        className="pr-11"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
@@ -276,7 +276,7 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
                         type="button"
                         onClick={() => setShowPassword((s) => !s)}
                         aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
-                        className="absolute right-2.5 top-2 rounded p-0.5 text-muted-foreground hover:text-foreground cursor-pointer"
+                        className="absolute right-1 top-1 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring cursor-pointer"
                       >
                         {showPassword ? (
                           <EyeOff className="h-4 w-4" aria-hidden="true" />
@@ -292,12 +292,12 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
                   </Button>
                 </form>
 
-                <div className="text-center text-xs text-muted-foreground">
-                  {t('auth.noAccount')}{' '}
+                <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
+                  <span>{t('auth.noAccount')}</span>
                   <button
                     type="button"
                     onClick={() => switchView('register')}
-                    className="font-medium text-primary hover:underline cursor-pointer"
+                    className="inline-flex min-h-8 items-center rounded-full px-2.5 py-1 font-medium text-primary transition-colors hover:bg-primary-container/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring cursor-pointer"
                   >
                     {t('auth.createAccountLink')}
                   </button>
@@ -371,7 +371,7 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
                         id="auth-reg-password"
                         type={showPassword ? 'text' : 'password'}
                         autoComplete="new-password"
-                        className="pr-9"
+                        className="pr-11"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
@@ -380,7 +380,7 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
                         type="button"
                         onClick={() => setShowPassword((s) => !s)}
                         aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
-                        className="absolute right-2.5 top-2 rounded p-0.5 text-muted-foreground hover:text-foreground cursor-pointer"
+                        className="absolute right-1 top-1 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring cursor-pointer"
                       >
                         {showPassword ? (
                           <EyeOff className="h-4 w-4" aria-hidden="true" />
@@ -413,12 +413,12 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
                   </Button>
                 </form>
 
-                <div className="text-center text-xs text-muted-foreground">
-                  {t('auth.haveAccount')}{' '}
+                <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
+                  <span>{t('auth.haveAccount')}</span>
                   <button
                     type="button"
                     onClick={() => switchView('login')}
-                    className="font-medium text-primary hover:underline cursor-pointer"
+                    className="inline-flex min-h-8 items-center rounded-full px-2.5 py-1 font-medium text-primary transition-colors hover:bg-primary-container/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring cursor-pointer"
                   >
                     {t('auth.signIn')}
                   </button>
@@ -566,7 +566,7 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
                           id="auth-new-password"
                           type={showPassword ? 'text' : 'password'}
                           autoComplete="new-password"
-                          className="pr-9"
+                          className="pr-11"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           required
@@ -575,7 +575,7 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
                           type="button"
                           onClick={() => setShowPassword((s) => !s)}
                           aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
-                          className="absolute right-2.5 top-2 rounded p-0.5 text-muted-foreground hover:text-foreground cursor-pointer"
+                          className="absolute right-1 top-1 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring cursor-pointer"
                         >
                           {showPassword ? (
                             <EyeOff className="h-4 w-4" aria-hidden="true" />

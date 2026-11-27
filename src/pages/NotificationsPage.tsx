@@ -4,6 +4,7 @@ import { Bell, Info } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Switch } from '@/components/ui/switch'
 import { ServiceIcon } from '@/components/subscriptions/ServiceIcon'
 import { useI18n } from '@/hooks/useI18n'
 import { useSubTrack } from '@/hooks/useSubTrack'
@@ -101,42 +102,46 @@ export function NotificationsPage() {
           <CardDescription>{t('notif.prefsDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <label className="flex items-center justify-between rounded-xl border border-border bg-background/60 p-3.5 transition-colors hover:bg-accent/40 cursor-pointer">
-            <div>
+          <div className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-background/60 p-3.5 transition-colors hover:bg-accent/40">
+            <label htmlFor="notif-enable-inapp" className="flex-1 cursor-pointer">
               <div className="text-sm font-medium">{t('notif.enableInApp')}</div>
               <div className="text-xs text-muted-foreground">{t('notif.enableInAppDesc')}</div>
-            </div>
-            <input
-              type="checkbox"
-              className="h-4 w-4 accent-primary"
+            </label>
+            <Switch
+              id="notif-enable-inapp"
               checked={draft.inAppAlertsEnabled}
-              onChange={(e) =>
-                setDraft((p) => ({ ...p, inAppAlertsEnabled: e.target.checked }))
+              onCheckedChange={(checked) =>
+                setDraft((p) => ({ ...p, inAppAlertsEnabled: checked }))
               }
             />
-          </label>
+          </div>
 
           <div className="space-y-2">
-            {toggles.map((item) => (
-              <label
-                key={item.key}
-                className="flex items-center justify-between rounded-xl border border-border p-3.5 transition-colors hover:bg-accent/40 cursor-pointer"
-              >
-                <div>
-                  <div className="text-sm font-medium">{item.label}</div>
-                  <div className="text-xs text-muted-foreground">{item.desc}</div>
+            {toggles.map((item) => {
+              const switchId = `notif-${item.key}`
+              return (
+                <div
+                  key={item.key}
+                  className="flex items-center justify-between gap-4 rounded-2xl border border-border p-3.5 transition-colors hover:bg-accent/40"
+                >
+                  <label
+                    htmlFor={switchId}
+                    className={`flex-1 ${draft.inAppAlertsEnabled ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
+                  >
+                    <div className="text-sm font-medium">{item.label}</div>
+                    <div className="text-xs text-muted-foreground">{item.desc}</div>
+                  </label>
+                  <Switch
+                    id={switchId}
+                    checked={draft[item.key]}
+                    disabled={!draft.inAppAlertsEnabled}
+                    onCheckedChange={(checked) =>
+                      setDraft((p) => ({ ...p, [item.key]: checked }))
+                    }
+                  />
                 </div>
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 accent-primary"
-                  checked={draft[item.key]}
-                  disabled={!draft.inAppAlertsEnabled}
-                  onChange={(e) =>
-                    setDraft((p) => ({ ...p, [item.key]: e.target.checked }))
-                  }
-                />
-              </label>
-            ))}
+              )
+            })}
           </div>
 
           <div className="flex items-start gap-2 rounded-lg border border-border bg-background/60 p-3 text-xs text-muted-foreground">

@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { useAuth } from '@/hooks/useAuth'
 import { useI18n } from '@/hooks/useI18n'
 import { useSubTrack } from '@/hooks/useSubTrack'
@@ -180,25 +181,24 @@ export function SettingsPage() {
               </Select>
             </div>
 
-            <label className="flex items-center justify-between rounded-xl border border-border p-3.5 transition-colors hover:bg-accent/40 cursor-pointer">
-              <div>
+            <div className="flex items-center justify-between gap-4 rounded-2xl border border-border p-3.5 transition-colors hover:bg-accent/40">
+              <label htmlFor="set-include-paused" className="flex-1 cursor-pointer">
                 <div className="text-sm font-medium">{t('set.includePaused')}</div>
                 <div className="text-xs text-muted-foreground">
                   {t('set.includePausedDesc')}
                 </div>
-              </div>
-              <input
-                type="checkbox"
-                className="h-4 w-4 accent-primary"
+              </label>
+              <Switch
+                id="set-include-paused"
                 checked={draft.includePausedInEstimates}
-                onChange={(e) =>
+                onCheckedChange={(checked) =>
                   setDraft((d) => ({
                     ...d,
-                    includePausedInEstimates: e.target.checked,
+                    includePausedInEstimates: checked,
                   }))
                 }
               />
-            </label>
+            </div>
           </CardContent>
         </Card>
 

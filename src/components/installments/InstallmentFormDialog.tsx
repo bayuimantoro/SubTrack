@@ -327,7 +327,6 @@ export function InstallmentFormDialog({
             </div>
           )}
 
-          {/* Simple Mode Primary Fields */}
           <div className="space-y-3">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground" htmlFor="inst-desc">
@@ -443,7 +442,6 @@ export function InstallmentFormDialog({
             </div>
           </div>
 
-          {/* Dynamic Payment Summary */}
           <div className="rounded-lg border border-border bg-muted/30 p-3.5 space-y-2">
             <div className="text-xs font-semibold">{t('inst.summaryTitle')}</div>
             {simpleSummary.isValid || (advancedOpen && displayTotalPayment > 0) ? (
@@ -489,7 +487,6 @@ export function InstallmentFormDialog({
             )}
           </div>
 
-          {/* Collapsible Advanced Mode */}
           <div className="rounded-lg border border-border">
             <button
               type="button"
@@ -691,7 +688,6 @@ export function InstallmentFormDialog({
             )}
           </div>
 
-          {/* Automatic Installment Schedule Preview */}
           <div className="rounded-lg border border-border bg-background/60 p-3 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>

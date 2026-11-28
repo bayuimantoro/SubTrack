@@ -141,7 +141,6 @@ export function InstallmentDetailPage() {
         </div>
       </div>
 
-      {/* Plan Summary */}
       <Card className="overflow-hidden">
         <CardContent className="grid gap-6 p-6 sm:grid-cols-2 lg:grid-cols-4">
           <div className="sm:col-span-2">
@@ -214,7 +213,6 @@ export function InstallmentDetailPage() {
         </div>
       </Card>
 
-      {/* Principal vs Financing Breakdown */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-1">
@@ -258,7 +256,6 @@ export function InstallmentDetailPage() {
         </Card>
       </div>
 
-      {/* Installment Schedule Table */}
       <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle>{t('inst.scheduleTitle')}</CardTitle>
@@ -350,7 +347,6 @@ export function InstallmentDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Immutable Payment History */}
       <Card>
         <CardHeader>
           <CardTitle>{t('inst.paymentHistory')}</CardTitle>

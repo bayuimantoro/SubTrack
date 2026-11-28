@@ -263,7 +263,6 @@ export function LandingPage() {
       ref={pageRef}
       className="min-h-screen overflow-x-clip bg-background text-foreground selection:bg-primary-container selection:text-on-primary-container"
     >
-      {/* Top Navigation */}
       <header className="sticky top-0 z-40 border-b border-border/80 bg-background/85 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4 sm:gap-3 sm:px-6 lg:px-8">
           <Link
@@ -277,7 +276,6 @@ export function LandingPage() {
           </Link>
 
           <nav className="flex shrink-0 items-center gap-1.5 sm:gap-2" aria-label="Landing">
-            {/* Mobile 1-tap Locale Cycle */}
             <button
               type="button"
               onClick={cycleLocale}
@@ -287,7 +285,6 @@ export function LandingPage() {
               {LOCALE_SHORT[locale]}
             </button>
 
-            {/* Desktop Compact Locale Selector */}
             <div
               className="hidden shrink-0 items-center rounded-full border border-border bg-card p-0.5 sm:flex"
               role="group"
@@ -341,7 +338,6 @@ export function LandingPage() {
             </Link>
           </nav>
         </div>
-        {/* Scroll progress hairline */}
         <div
           aria-hidden="true"
           className="scroll-progress-bar h-[2px] w-full bg-primary/85"
@@ -349,24 +345,17 @@ export function LandingPage() {
       </header>
 
       <main>
-        {/* ACT 1 — Dimensional Layered Hero (Scroll-Craft Depth Planes) */}
         <section
           ref={heroRef}
           className="relative overflow-x-clip border-b border-border/70"
         >
-          {/* Plane 0: Architectural Background Grid + Soft Ambient Horizon */}
           <div
             aria-hidden="true"
-            className="hero-plane-bg pointer-events-none absolute inset-0 bg-grid-fintech opacity-70"
-          />
-          <div
-            aria-hidden="true"
-            className="hero-plane-bg pointer-events-none absolute inset-x-0 -top-24 mx-auto h-[420px] max-w-4xl rounded-full bg-primary/12 blur-3xl"
+            className="hero-plane-bg pointer-events-none absolute inset-0 bg-grid-fintech opacity-55"
           />
 
           <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-12 sm:px-6 sm:pb-24 sm:pt-20 lg:px-8 lg:pt-24">
             <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-10">
-              {/* Plane 1: Primary Headline & Actions */}
               <div className="hero-plane-copy space-y-6 lg:col-span-6">
                 <h1
                   aria-label={t('landing.heroTitle')}
@@ -422,12 +411,10 @@ export function LandingPage() {
                 </div>
               </div>
 
-              {/* Plane 2 & 3: Layered Financial Ledger Subject + Foreground Depth Chips */}
               <div
                 className="animate-landing-rise relative lg:col-span-6"
                 style={{ animationDelay: '220ms' }}
               >
-                {/* Plane 2: Main Ledger Card */}
                 <div className="hero-plane-subject glass-surface relative rounded-3xl border p-5 shadow-elevated ring-1 ring-inset ring-white/10 sm:p-6">
                   <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
                     <div>
@@ -439,15 +426,11 @@ export function LandingPage() {
                       </p>
                     </div>
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-container px-2.5 py-1 text-xs font-medium text-on-primary-container">
-                      <span className="relative flex h-2 w-2" aria-hidden="true">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
-                        <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-                      </span>
+                      <span className="h-2 w-2 rounded-full bg-primary" aria-hidden="true" />
                       {t('landing.previewStatusOk')}
                     </span>
                   </div>
 
-                  {/* Ledger Rows */}
                   <div className="mt-4 divide-y divide-border/80">
                     <div className="flex items-center justify-between gap-3 py-2.5 text-sm">
                       <div className="flex items-center gap-3 min-w-0">
@@ -501,7 +484,6 @@ export function LandingPage() {
                     </div>
                   </div>
 
-                  {/* Progress Track */}
                   <div className="mt-4 rounded-xl bg-muted/60 p-3">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-muted-foreground">
@@ -515,11 +497,9 @@ export function LandingPage() {
                   </div>
                 </div>
 
-                {/* Mobile-overlapping / Desktop-floating Depth Chips */}
                 <div className="-mt-3 grid grid-cols-2 gap-2.5 px-2 md:mt-0 md:block md:px-0">
-                  {/* Plane 3A: Foreground Floating Reminder Chip */}
                   <div className="hero-plane-float-a md:absolute md:-bottom-7 md:-left-6">
-                    <div className="animate-float-gentle glass-surface flex items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-xs shadow-elevated ring-1 ring-inset ring-white/10 sm:px-3.5">
+                    <div className="glass-surface flex items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-xs shadow-elevated ring-1 ring-inset ring-white/10 sm:px-3.5">
                       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400">
                         <Bell className="h-3.5 w-3.5" aria-hidden="true" />
                       </div>
@@ -530,9 +510,8 @@ export function LandingPage() {
                     </div>
                   </div>
 
-                  {/* Plane 3B: Foreground Floating Annual Projection Chip */}
                   <div className="hero-plane-float-b md:absolute md:-right-4 md:-top-10">
-                    <div className="animate-float-gentle-delayed glass-surface flex items-center justify-between gap-2 rounded-2xl border px-3 py-2.5 text-xs shadow-elevated ring-1 ring-inset ring-white/10 sm:gap-3 sm:px-3.5">
+                    <div className="glass-surface flex items-center justify-between gap-2 rounded-2xl border px-3 py-2.5 text-xs shadow-elevated ring-1 ring-inset ring-white/10 sm:gap-3 sm:px-3.5">
                       <div className="min-w-0">
                         <p className="truncate text-[11px] text-muted-foreground">{t('landing.floatAnnualLabel')}</p>
                         <p className="truncate font-display text-sm font-bold tabular-nums text-primary">
@@ -548,7 +527,6 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* ACT 2 — Signature Interactive Move: Live Cashflow & Installment Simulator */}
         <section className="border-b border-border/70 bg-sidebar/50 py-16 sm:py-24">
           <RevealBlock className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <div className="max-w-2xl">
@@ -561,7 +539,6 @@ export function LandingPage() {
             </div>
 
             <div className="mt-8 grid gap-6 lg:grid-cols-12">
-              {/* Interactive Controls */}
               <div className="space-y-6 rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6 lg:col-span-7">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -641,7 +618,6 @@ export function LandingPage() {
                 </div>
               </div>
 
-              {/* Live Calculated Ledger Output */}
               <div className="flex flex-col justify-between rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6 lg:col-span-5">
                 <div className="space-y-5">
                   <div>
@@ -653,7 +629,6 @@ export function LandingPage() {
                     </p>
                   </div>
 
-                  {/* Proportion Bar */}
                   <div>
                     <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-muted">
                       <div
@@ -709,10 +684,8 @@ export function LandingPage() {
           </RevealBlock>
         </section>
 
-        {/* ACT 3 — Varied Editorial Feature Bands (No Repeated Identical Card Grids) */}
         <section className="py-16 sm:py-24">
           <div className="mx-auto max-w-6xl space-y-16 px-4 sm:px-6 sm:space-y-24 lg:px-8">
-            {/* Band A: Installments — Simple & Advanced Transparency */}
             <RevealBlock className="grid items-center gap-8 lg:grid-cols-12 lg:gap-12">
               <div className="space-y-4 lg:col-span-5">
                 <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
@@ -769,7 +742,6 @@ export function LandingPage() {
               </div>
             </RevealBlock>
 
-            {/* Band B: Calendar, Multi-Currency & Full Data Ownership */}
             <RevealBlock className="grid items-center gap-8 lg:grid-cols-12 lg:gap-12" delayMs={80}>
               <div className="order-2 rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6 lg:order-1 lg:col-span-7">
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -813,7 +785,6 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* ACT 4 — Calm Commitment Close */}
         <section className="border-t border-border bg-sidebar/60 py-16 sm:py-20">
           <RevealBlock className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
             <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
@@ -845,7 +816,6 @@ export function LandingPage() {
         </section>
       </main>
 
-      {/* Footer */}
       <footer className="border-t border-border bg-background py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 text-xs text-muted-foreground sm:flex-row sm:px-6 lg:px-8">
           <div className="flex items-center gap-2">

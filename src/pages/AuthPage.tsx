@@ -186,11 +186,7 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background p-4 text-foreground">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-grid-fintech opacity-50"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-24 h-72 w-full max-w-lg rounded-full bg-primary/12 blur-3xl"
+        className="pointer-events-none absolute inset-0 bg-grid-fintech opacity-45"
       />
 
       <div className="relative z-10 w-full max-w-md space-y-6">
@@ -648,7 +644,6 @@ export function AuthPage({ initialView = 'login' }: { initialView?: AuthView }) 
           )}
         </Card>
 
-        {/* Explicit Local Mode Option */}
         {view !== 'reset-password' && (
           <Card className="border-dashed">
             <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">

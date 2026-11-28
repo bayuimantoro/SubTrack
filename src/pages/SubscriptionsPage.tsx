@@ -112,7 +112,6 @@ export function SubscriptionsPage() {
 
   return (
     <div className="space-y-4">
-      {/* Search, Filter & Sort Toolbar */}
       <Card>
         <CardContent className="flex flex-col gap-3 p-4 lg:flex-row lg:items-center">
           <div className="relative flex-1">
@@ -229,7 +228,6 @@ export function SubscriptionsPage() {
         </span>
       </div>
 
-      {/* Empty State */}
       {filtered.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-14 text-center">

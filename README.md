@@ -1,32 +1,35 @@
-# React + TypeScript + Vite
+# SubTrack
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Personal finance web app for tracking recurring subscriptions, installment/PayLater plans, renewal calendars, and spending analytics.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Subscriptions:** Recurring billing tracking (weekly, monthly, quarterly, semi-annual, annual, or custom intervals), pause/resume, payment recording, cycle skipping, and refund logging.
+- **Installments & PayLater:** Fixed and variable payment schedules, principal vs. interest/fee breakdown, partial/full payment recording, and early settlement.
+- **Dashboard & Analytics:** Combined monthly obligations, 6-month renewal projections, category breakdowns, and provider summaries.
+- **Calendar & Reminders:** Monthly due-date grid and configurable in-app reminder windows (7d, 3d, 1d, due date).
+- **Storage & Portability:** Works offline in Local Mode (`localStorage`) or synced via Supabase (PostgreSQL + Row-Level Security), with JSON backup export/import.
+- **Localization & Themes:** English, Bahasa Indonesia, Bahasa Melayu, and Japanese; Light, Dark, and System themes.
 
-## React Compiler
+## Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 19, TypeScript (strict), React Router 7
+- Vite 8 (Rolldown) & Tailwind CSS 4
+- Recharts, Lucide React, Sonner
+- Supabase JS (optional cloud backend)
+- Vitest & Oxlint
 
-## Expanding the Oxlint configuration
+## Scripts
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev      # Start local dev server
+npm test         # Run Vitest unit tests
+npm run lint     # Run Oxlint
+npm run build    # Type-check and build production bundle
+npm run preview  # Serve production build locally
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Environment
+
+Copy `.env.example` to `.env.local` and set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to enable Cloud Mode. Without them, SubTrack runs in Local Mode.

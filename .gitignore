@@ -27,3 +27,4 @@ dist-ssr
 promt.md
 .superpowers/
 semantic-review/
+.playwright-mcp/

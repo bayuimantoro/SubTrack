@@ -153,7 +153,6 @@ export function InstallmentsPage() {
 
   return (
     <div className="space-y-6">
-      {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -236,7 +235,6 @@ export function InstallmentsPage() {
         </Card>
       </div>
 
-      {/* Filter & Add Toolbar */}
       <Card>
         <CardContent className="flex flex-col gap-3 p-4 lg:flex-row lg:items-center">
           <div className="relative flex-1">
@@ -299,7 +297,6 @@ export function InstallmentsPage() {
         </CardContent>
       </Card>
 
-      {/* Plans Grid */}
       {enrichedPlans.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
@@ -363,7 +360,6 @@ export function InstallmentsPage() {
                     </Badge>
                   </div>
 
-                  {/* Progress Bar */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-muted-foreground">{t('inst.repaymentProgress')}</span>

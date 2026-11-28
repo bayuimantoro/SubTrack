@@ -20,8 +20,8 @@ export function isValidLocale(value: unknown): value is Locale {
 
 const en = {
   // Brand & Navigation
-  'app.tagline': 'Zero surprises',
-  'app.taglineFull': 'All subscriptions & installments. One dashboard. Zero surprises.',
+  'app.tagline': 'Subscriptions & installments',
+  'app.taglineFull': 'Track recurring subscriptions and installment plans in one place.',
   'nav.dashboard': 'Dashboard',
   'nav.subscriptions': 'My Subscriptions',
   'nav.installments': 'Installments',
@@ -87,7 +87,7 @@ const en = {
 
   // Auth Page
   'auth.loginTitle': 'Sign in to Cloud Mode',
-  'auth.loginDesc': 'Access your encrypted, row-isolated workspace across devices.',
+  'auth.loginDesc': 'Sync your subscriptions and installments across devices.',
   'auth.email': 'Email',
   'auth.password': 'Password',
   'auth.forgotPassword': 'Forgot password?',
@@ -532,8 +532,8 @@ const en = {
 export type TranslationKey = keyof typeof en
 
 const id: Record<TranslationKey, string> = {
-  'app.tagline': 'Tanpa kejutan',
-  'app.taglineFull': 'Semua langganan & cicilan. Satu dasbor. Tanpa kejutan.',
+  'app.tagline': 'Langganan & cicilan',
+  'app.taglineFull': 'Catat langganan rutin dan cicilan di satu tempat.',
   'nav.dashboard': 'Dasbor',
   'nav.subscriptions': 'Langganan Saya',
   'nav.installments': 'Cicilan & PayLater',
@@ -596,7 +596,7 @@ const id: Record<TranslationKey, string> = {
   'provider.other': 'Lainnya',
 
   'auth.loginTitle': 'Masuk ke Mode Cloud',
-  'auth.loginDesc': 'Akses ruang kerja terenkripsi Anda di berbagai perangkat.',
+  'auth.loginDesc': 'Sinkronkan langganan dan cicilan Anda di berbagai perangkat.',
   'auth.email': 'Email',
   'auth.password': 'Kata Sandi',
   'auth.forgotPassword': 'Lupa kata sandi?',
@@ -1030,8 +1030,8 @@ const id: Record<TranslationKey, string> = {
 }
 
 const ms: Record<TranslationKey, string> = {
-  'app.tagline': 'Tiada kejutan',
-  'app.taglineFull': 'Semua langganan & ansuran. Satu papan pemuka. Tiada kejutan.',
+  'app.tagline': 'Langganan & ansuran',
+  'app.taglineFull': 'Jejak langganan berulang dan pelan ansuran di satu tempat.',
   'nav.dashboard': 'Papan Pemuka',
   'nav.subscriptions': 'Langganan Saya',
   'nav.installments': 'Ansuran & PayLater',
@@ -1094,7 +1094,7 @@ const ms: Record<TranslationKey, string> = {
   'provider.other': 'Lain-lain',
 
   'auth.loginTitle': 'Log Masuk ke Mod Awan',
-  'auth.loginDesc': 'Akses ruang kerja tersulit anda merentas peranti.',
+  'auth.loginDesc': 'Segerakkan langganan dan ansuran anda merentas peranti.',
   'auth.email': 'E-mel',
   'auth.password': 'Kata Laluan',
   'auth.forgotPassword': 'Lupa kata laluan?',
@@ -1528,8 +1528,8 @@ const ms: Record<TranslationKey, string> = {
 }
 
 const ja: Record<TranslationKey, string> = {
-  'app.tagline': '支払い漏れゼロへ',
-  'app.taglineFull': 'すべてのサブスクと分割払いをひとつの画面で管理。',
+  'app.tagline': 'サブスク・分割払い管理',
+  'app.taglineFull': '定期購読と分割払いをひとつの画面でまとめて管理。',
   'nav.dashboard': 'ダッシュボード',
   'nav.subscriptions': 'サブスク一覧',
   'nav.installments': '分割払い・PayLater',
@@ -1592,7 +1592,7 @@ const ja: Record<TranslationKey, string> = {
   'provider.other': 'その他',
 
   'auth.loginTitle': 'クラウドモードにログイン',
-  'auth.loginDesc': '暗号化されユーザーごとに分離されたワークスペースへアクセスします。',
+  'auth.loginDesc': 'サブスクリプションと分割払いを複数デバイスで同期します。',
   'auth.email': 'メールアドレス',
   'auth.password': 'パスワード',
   'auth.forgotPassword': 'パスワードをお忘れですか？',

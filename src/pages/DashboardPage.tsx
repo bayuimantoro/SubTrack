@@ -184,7 +184,6 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -260,7 +259,6 @@ export function DashboardPage() {
         </Card>
       </div>
 
-      {/* Combined Monthly Obligations & Installments Overview */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-2 pb-3">
           <div>
@@ -319,7 +317,6 @@ export function DashboardPage() {
         </CardContent>
       </Card>
 
-      {/* Charts Row */}
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
@@ -425,7 +422,6 @@ export function DashboardPage() {
         </Card>
       </div>
 
-      {/* Upcoming & Recently Added */}
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">

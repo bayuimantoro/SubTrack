@@ -256,7 +256,6 @@ export function SubscriptionDetailPage() {
         </div>
       </div>
 
-      {/* Header Summary */}
       <Card>
         <CardContent className="flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
@@ -304,7 +303,6 @@ export function SubscriptionDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Details & Total Spent */}
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
@@ -382,7 +380,6 @@ export function SubscriptionDetailPage() {
         </Card>
       </div>
 
-      {/* Billing History */}
       <Card>
         <CardHeader>
           <CardTitle>{t('subs.billingHistory')}</CardTitle>

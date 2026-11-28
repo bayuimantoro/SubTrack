@@ -99,7 +99,6 @@ export function AppShell() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
-      {/* Desktop Sidebar */}
       <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-sidebar md:flex">
         <div className="flex h-16 items-center gap-2.5 border-b border-border/80 px-5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
@@ -189,7 +188,6 @@ export function AppShell() {
         </div>
       </aside>
 
-      {/* Mobile Drawer */}
       {mobileOpen && (
         <div
           className="fixed inset-0 z-50 flex md:hidden"
@@ -295,7 +293,6 @@ export function AppShell() {
         </div>
       )}
 
-      {/* Main Content */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <header className="flex h-16 shrink-0 items-center justify-between border-b border-border/80 bg-background/85 px-4 backdrop-blur-md sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">

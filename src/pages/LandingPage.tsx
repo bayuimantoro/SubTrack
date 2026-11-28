@@ -426,7 +426,10 @@ export function LandingPage() {
                       </p>
                     </div>
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-container px-2.5 py-1 text-xs font-medium text-on-primary-container">
-                      <span className="h-2 w-2 rounded-full bg-primary" aria-hidden="true" />
+                      <span className="relative flex h-2 w-2" aria-hidden="true">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+                      </span>
                       {t('landing.previewStatusOk')}
                     </span>
                   </div>
@@ -499,7 +502,7 @@ export function LandingPage() {
 
                 <div className="-mt-3 grid grid-cols-2 gap-2.5 px-2 md:mt-0 md:block md:px-0">
                   <div className="hero-plane-float-a md:absolute md:-bottom-7 md:-left-6">
-                    <div className="glass-surface flex items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-xs shadow-elevated ring-1 ring-inset ring-white/10 sm:px-3.5">
+                    <div className="animate-float-gentle glass-surface flex items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-xs shadow-elevated ring-1 ring-inset ring-white/10 sm:px-3.5">
                       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400">
                         <Bell className="h-3.5 w-3.5" aria-hidden="true" />
                       </div>
@@ -511,7 +514,7 @@ export function LandingPage() {
                   </div>
 
                   <div className="hero-plane-float-b md:absolute md:-right-4 md:-top-10">
-                    <div className="glass-surface flex items-center justify-between gap-2 rounded-2xl border px-3 py-2.5 text-xs shadow-elevated ring-1 ring-inset ring-white/10 sm:gap-3 sm:px-3.5">
+                    <div className="animate-float-gentle-delayed glass-surface flex items-center justify-between gap-2 rounded-2xl border px-3 py-2.5 text-xs shadow-elevated ring-1 ring-inset ring-white/10 sm:gap-3 sm:px-3.5">
                       <div className="min-w-0">
                         <p className="truncate text-[11px] text-muted-foreground">{t('landing.floatAnnualLabel')}</p>
                         <p className="truncate font-display text-sm font-bold tabular-nums text-primary">
